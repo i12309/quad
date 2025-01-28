@@ -125,7 +125,7 @@ export class PingPong extends BaseModule {
 
         // Рисуем платформу
         for (let i = 0; i < this.platform.width; i++) {
-            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`] = { type: '#0000FF' }; // Синий цвет
+            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`] = { type: '#0000FF' }; // Синий цвет
         }
 
         this.gridManager.updateVisibleTiles();
