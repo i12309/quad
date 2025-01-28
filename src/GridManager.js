@@ -68,7 +68,7 @@ export class GridManager {
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
             //tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
-            tile.fill(this.selectedTiles[cellKey].type);
+            tile.fill(this.selectedColor);
         }
         return tile;
     }
@@ -81,9 +81,9 @@ export class GridManager {
             this.layer.add(tile);
         }
         if (this.selectedTiles[cellKey]) {
-            if (this.selectedTiles[cellKey].type === '#CCCCCC') {
+            if (this.selectedTiles[cellKey].type === 'gray') {
                 // Меняем тип клетки на желтый
-                this.selectedTiles[cellKey].type = '#FFFF99';
+                this.selectedTiles[cellKey].type = 'yellow';
                 tile.fill(this.yellowColor);
             } else {
                 // Удаляем клетку
@@ -92,7 +92,7 @@ export class GridManager {
             }
         } else {
             // Создаем новую серую клетку
-            this.selectedTiles[cellKey] = { type: '#CCCCCC' };
+            this.selectedTiles[cellKey] = { type: 'gray' };
             tile.fill(this.selectedColor);
         }
         this.scheduleUpdate();
@@ -158,7 +158,7 @@ export class GridManager {
         }
         if (!tile) return;
         if (action === 'draw') {
-            this.selectedTiles[cellKey] = { type: '#CCCCCC' };
+            this.selectedTiles[cellKey] = { type: 'gray' };
             tile.fill(this.selectedColor);
         } else if (action === 'erase') {
             delete this.selectedTiles[cellKey];
