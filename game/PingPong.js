@@ -1,0 +1,127 @@
+// Файл: ./game/PingPong.js
+import { BaseModule } from './BaseModule.js';
+
+export class PingPong extends BaseModule {
+    constructor(gridManager) {
+        super();
+        this.name = 'PingPong';
+        this.gridManager = gridManager;
+        this.isRunning = false;
+        this.ball = { x: 0, y: 0, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
+        this.platform = { x: 0, width: 5 }; // Платформа (положение и ширина)
+        this.interval = null;
+        this.speed = 100; // Скорость обновления (мс)
+        this.score = 0; // Счёт
+    }
+
+    start() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            this.resetGame();
+            this.bindMouseEvents();
+            this.interval = setInterval(() => this.update(), this.speed);
+        }
+    }
+
+    pause() {
+        if (this.isRunning) {
+            this.isRunning = false;
+            clearInterval(this.interval);
+        }
+    }
+
+    clear() {
+        this.pause();
+        this.gridManager.selectedTiles = {};
+        this.gridManager.updateVisibleTiles();
+        this.resetGame();
+    }
+
+    resetGame() {
+        this.ball = { x: Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize / 2), y: 5, dx: 1, dy: -1 };
+        this.platform = { x: Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize / 2) - Math.floor(this.platform.width / 2), width: 5 };
+        this.score = 0;
+        this.gridManager.selectedTiles = {};
+        this.gridManager.updateVisibleTiles();
+    }
+
+    bindMouseEvents() {
+        this.gridManager.stage.on('mousemove', (event) => {
+            const pos = this.gridManager.stage.getPointerPosition();
+            if (!pos) return;
+
+            const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
+            this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize) - this.platform.width));
+        });
+    }
+
+    update() {
+        // Очищаем старое положение мяча
+        delete this.gridManager.selectedTiles[`${this.ball.x},${this.ball.y}`];
+
+        // Обновляем положение мяча
+        this.ball.x += this.ball.dx;
+        this.ball.y += this.ball.dy;
+
+        // Проверяем столкновения со стенами
+        if (this.ball.x <= 0 || this.ball.x >= Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize) - 1) {
+            this.ball.dx *= -1; // Отскок по горизонтали
+        }
+        if (this.ball.y <= 0) {
+            this.ball.dy *= -1; // Отскок по вертикали
+        }
+
+        // Проверяем столкновение с платформой
+        if (this.ball.y === Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize) - 2) {
+            if (this.ball.x >= this.platform.x && this.ball.x < this.platform.x + this.platform.width) {
+                this.ball.dy *= -1; // Отскок от платформы
+                this.score++;
+                console.log(`Счёт: ${this.score}`);
+            } else {
+                // Мяч упал за платформу
+                this.pause();
+                console.log('Игра окончена!');
+                alert(`Игра окончена! Ваш счёт: ${this.score}`);
+                this.clear();
+            }
+        }
+
+        // Рисуем мяч
+        this.gridManager.selectedTiles[`${this.ball.x},${this.ball.y}`] = { type: '#FFFF00' }; // Жёлтый цвет
+
+        // Рисуем платформу
+        for (let i = 0; i < this.platform.width; i++) {
+            this.gridManager.selectedTiles[`${this.platform.x + i},${Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize) - 1}`] = { type: '#CCCCCC' }; // Серый цвет
+        }
+
+        this.gridManager.updateVisibleTiles();
+    }
+
+    showContextMenu(x, y) {
+        const contextMenu = document.createElement('div');
+        contextMenu.style.position = 'absolute';
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.backgroundColor = 'white';
+        contextMenu.style.border = '1px solid black';
+        contextMenu.style.padding = '10px';
+        contextMenu.style.zIndex = '1000';
+
+        const restartButton = document.createElement('button');
+        restartButton.textContent = 'Начать заново';
+        restartButton.addEventListener('click', () => {
+            this.clear();
+            this.start();
+            contextMenu.remove();
+        });
+
+        contextMenu.appendChild(restartButton);
+        document.body.appendChild(contextMenu);
+
+        document.addEventListener('click', (event) => {
+            if (!contextMenu.contains(event.target)) {
+                contextMenu.remove();
+            }
+        }, { once: true });
+    }
+}

@@ -84,6 +84,16 @@
         .catch((error) => {
             console.log('Модуль ColorSpread не найден. Продолжаем без него.');
         });
+
+        import('./game/PingPong.js')
+        .then((module) => {
+            const PingPong = module.PingPong;
+            const pingPong = new PingPong(gridManager);
+            controls.registerModule(pingPong);
+        })
+        .catch((error) => {
+            console.log('Модуль PingPong не найден. Продолжаем без него.');
+        });
     </script>
 </body>
 </html>
