@@ -7,11 +7,13 @@ export class PingPong extends BaseModule {
         this.name = 'PingPong';
         this.gridManager = gridManager;
         this.isRunning = false;
-        this.ball = { x: 0, y: 0, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
-        this.platform = { x: 0, width: 5 }; // Платформа (положение и ширина)
+        this.ball = { x: 75, y: 50, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
+        this.platform = { x: 140, width: 6 }; // Платформа (положение и ширина)
         this.interval = null;
         this.speed = 100; // Скорость обновления (мс)
         this.score = 0; // Счёт
+        this.fieldWidth = 150; // Ширина поля
+        this.fieldHeight = 100; // Высота поля
     }
 
     start() {
@@ -38,8 +40,8 @@ export class PingPong extends BaseModule {
     }
 
     resetGame() {
-        this.ball = { x: Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize / 2), y: 5, dx: 1, dy: -1 };
-        this.platform = { x: Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize / 2) - Math.floor(this.platform.width / 2), width: 5 };
+        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
+        this.platform = { x: this.fieldWidth - 10 - this.platform.width, width: 6 }; // Платформа справа
         this.score = 0;
         this.gridManager.selectedTiles = {};
         this.gridManager.updateVisibleTiles();
@@ -51,7 +53,7 @@ export class PingPong extends BaseModule {
             if (!pos) return;
 
             const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
-            this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize) - this.platform.width));
+            this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width));
         });
     }
 
@@ -64,7 +66,7 @@ export class PingPong extends BaseModule {
         this.ball.y += this.ball.dy;
 
         // Проверяем столкновения со стенами
-        if (this.ball.x <= 0 || this.ball.x >= Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize) - 1) {
+        if (this.ball.x <= 0 || this.ball.x >= this.fieldWidth - 1) {
             this.ball.dx *= -1; // Отскок по горизонтали
         }
         if (this.ball.y <= 0) {
@@ -72,7 +74,7 @@ export class PingPong extends BaseModule {
         }
 
         // Проверяем столкновение с платформой
-        if (this.ball.y === Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize) - 2) {
+        if (this.ball.y === this.fieldHeight - 2) {
             if (this.ball.x >= this.platform.x && this.ball.x < this.platform.x + this.platform.width) {
                 this.ball.dy *= -1; // Отскок от платформы
                 this.score++;
@@ -91,7 +93,7 @@ export class PingPong extends BaseModule {
 
         // Рисуем платформу
         for (let i = 0; i < this.platform.width; i++) {
-            this.gridManager.selectedTiles[`${this.platform.x + i},${Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize) - 1}`] = { type: '#CCCCCC' }; // Серый цвет
+            this.gridManager.selectedTiles[`${this.platform.x + i},${this.fieldHeight - 1}`] = { type: '#0000FF' }; // Синий цвет
         }
 
         this.gridManager.updateVisibleTiles();
