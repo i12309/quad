@@ -9,7 +9,7 @@ export class GridManager {
         this.maxTileSize = 10;
         this.backgroundColor = '#2C2C2C';
         this.selectedColor = '#CCCCCC'; // Серый цвет
-        this.yellowColor = 'red'; // Желтый цвет #FFFF99
+        this.yellowColor = '#FFFF99'; // Желтый цвет
         this.stage = new Konva.Stage({
             container: 'container',
             width: window.innerWidth,
@@ -68,7 +68,6 @@ export class GridManager {
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
             tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
-            //tile.fill(this.selectedTiles[cellKey].type);
         }
         return tile;
     }
@@ -83,7 +82,7 @@ export class GridManager {
         if (this.selectedTiles[cellKey]) {
             if (this.selectedTiles[cellKey].type === 'gray') {
                 // Меняем тип клетки на желтый
-                this.selectedTiles[cellKey].type = 'red';
+                this.selectedTiles[cellKey].type = 'yellow';
                 tile.fill(this.yellowColor);
             } else {
                 // Удаляем клетку
