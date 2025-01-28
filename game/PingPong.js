@@ -53,8 +53,8 @@ export class PingPong extends BaseModule {
 
     drawFieldBorder() {
         // Очищаем предыдущие границы
-        for (let x = 0; x < this.gridManager.stage.width() / this.gridManager.totalSize; x++) {
-            for (let y = 0; y < this.gridManager.stage.height() / this.gridManager.totalSize; y++) {
+        for (let x = 0; x < this.gridManager.stage.width()+1 / this.gridManager.totalSize; x++) {
+            for (let y = 0; y < this.gridManager.stage.height()+1 / this.gridManager.totalSize; y++) {
                 const key = `${x},${y}`;
                 if (this.gridManager.selectedTiles[key] && this.gridManager.selectedTiles[key].type === '#CCCCCC') {
                     delete this.gridManager.selectedTiles[key];
