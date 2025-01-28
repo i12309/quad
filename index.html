@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konva.js Grid</title>
+    <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #2C2C2C; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        select {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <select id="game-selector">
+            <!-- Опции будут добавлены динамически -->
+        </select>
+        <button id="start-stop-btn">Старт</button>
+        <button id="clear-btn">Стереть</button>
+    </div>
+    <div id="container"></div>
+
+    <!-- Подключаем модули -->
+    <script type="module">
+
+        // Главные модули
+        import { GridManager } from './src/GridManager.js';
+        import { Controls } from './src/Controls.js';
+        import { StageManager } from './src/StageManager.js';
+
+        // Инициализация приложения
+        const gridManager = new GridManager();
+        const stageManager = new StageManager(gridManager);
+        const controls = new Controls();
+
+        // Модули игр
+
+        // Динамическая загрузка PhysicsSimulation (опциональный модуль)
+        import('./game/PhysicsSimulation.js')
+        .then((module) => {
+            const PhysicsSimulation = module.PhysicsSimulation;
+            const physicsSimulation = new PhysicsSimulation(gridManager);
+            controls.registerModule(physicsSimulation);
+        })
+        .catch((error) => {
+            console.log('Модуль PhysicsSimulation не найден. Продолжаем без него.');
+        });
+
+        // Динамическая загрузка PhysicsSimulation (опциональный модуль)
+        import('./game/GameOfLife.js')
+        .then((module) => {
+            const GameOfLife = module.GameOfLife;
+            const gameOfLife = new GameOfLife(gridManager);
+            controls.registerModule(gameOfLife);
+        })
+        .catch((error) => {
+            console.log('Модуль gameOfLife не найден. Продолжаем без него.');
+        });
+    </script>
+</body>
+</html>
