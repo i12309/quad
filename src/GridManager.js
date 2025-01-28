@@ -62,13 +62,16 @@ export class GridManager {
                 listening: true,
             });
             tile.on('click', () => {
-                this.toggleCell(x, y);
+                //this.toggleCell(x, y);
             });
         }
         const cellKey = `${x},${y}`;
+        tile.fill(this.selectedTiles[cellKey].type);
+            /*
         if (this.selectedTiles[cellKey]) {
-            //tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
+            tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
         }
+            */
         return tile;
     }
 
