@@ -67,8 +67,8 @@ export class GridManager {
         }
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
-            //tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
-            tile.fill(this.selectedTiles[cellKey].type);
+            tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
+            //tile.fill(this.selectedTiles[cellKey].type);
         }
         return tile;
     }
