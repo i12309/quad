@@ -61,9 +61,9 @@ export class GridManager {
                 strokeWidth: 0,
                 listening: true,
             });
-            tile.on('click', () => {
-                this.toggleCell(x, y);
-            });
+            //tile.on('click', () => {
+            //    this.toggleCell(x, y);
+            //});
         }
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
