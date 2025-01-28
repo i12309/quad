@@ -10,7 +10,7 @@ export class PingPong extends BaseModule {
         this.ball = { x: 75, y: 50, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
         this.platform = { x: 140, width: 6 }; // Платформа (положение и ширина)
         this.interval = null;
-        this.speed = 100; // Скорость обновления (мс)
+        this.speed = 10; // Скорость обновления (мс)
         this.score = 0; // Счёт
         this.fieldWidth = 50; // Ширина поля
         this.fieldHeight = 50; // Высота поля
