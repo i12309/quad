@@ -9,7 +9,7 @@ export class GridManager {
         this.maxTileSize = 10;
         this.backgroundColor = '#2C2C2C';
         this.selectedColor = '#CCCCCC'; // Серый цвет
-        this.yellowColor = '#FFFF99'; // Желтый цвет
+        this.yellowColor = 'red'; // Желтый цвет #FFFF99
         this.stage = new Konva.Stage({
             container: 'container',
             width: window.innerWidth,
@@ -82,7 +82,7 @@ export class GridManager {
         if (this.selectedTiles[cellKey]) {
             if (this.selectedTiles[cellKey].type === 'gray') {
                 // Меняем тип клетки на желтый
-                this.selectedTiles[cellKey].type = 'yellow';
+                this.selectedTiles[cellKey].type = 'red';
                 tile.fill(this.yellowColor);
             } else {
                 // Удаляем клетку
