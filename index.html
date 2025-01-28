@@ -51,7 +51,7 @@
         const stageManager = new StageManager(gridManager);
         const controls = new Controls();
 
-        // Модули игр
+        // Модули игр =====================================================
 
         // Динамическая загрузка PhysicsSimulation (опциональный модуль)
         import('./game/PhysicsSimulation.js')
@@ -73,6 +73,16 @@
         })
         .catch((error) => {
             console.log('Модуль gameOfLife не найден. Продолжаем без него.');
+        });
+
+        import('./game/ColorSpread.js')
+        .then((module) => {
+            const ColorSpread = module.ColorSpread;
+            const colorSpread = new ColorSpread(gridManager);
+            controls.registerModule(colorSpread);
+        })
+        .catch((error) => {
+            console.log('Модуль ColorSpread не найден. Продолжаем без него.');
         });
     </script>
 </body>
