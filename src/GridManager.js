@@ -67,7 +67,8 @@ export class GridManager {
         }
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
-            tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
+            //tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
+            tile.fill(this.selectedTiles[cellKey].type);
         }
         return tile;
     }
@@ -79,7 +80,6 @@ export class GridManager {
             tile = this.createTile(x, y);
             this.layer.add(tile);
         }
-        /*
         if (this.selectedTiles[cellKey]) {
             if (this.selectedTiles[cellKey].type === 'gray') {
                 // Меняем тип клетки на желтый
@@ -95,7 +95,6 @@ export class GridManager {
             this.selectedTiles[cellKey] = { type: 'gray' };
             tile.fill(this.selectedColor);
         }
-        */
         this.scheduleUpdate();
     }
 
