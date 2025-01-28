@@ -12,8 +12,8 @@ export class PingPong extends BaseModule {
         this.interval = null;
         this.speed = 100; // Скорость обновления (мс)
         this.score = 0; // Счёт
-        this.fieldWidth = 150; // Ширина поля
-        this.fieldHeight = 100; // Высота поля
+        this.fieldWidth = 50; // Ширина поля
+        this.fieldHeight = 50; // Высота поля
     }
 
     start() {
