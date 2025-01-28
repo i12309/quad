@@ -10,16 +10,19 @@ export class PingPong extends BaseModule {
         this.ball = { x: 75, y: 50, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
         this.platform = { x: 140, width: 6 }; // Платформа (положение и ширина)
         this.interval = null;
-        this.speed = 10; // Скорость обновления (мс)
+        this.speed = 100; // Скорость обновления (мс)
         this.score = 0; // Счёт
-        this.fieldWidth = 50; // Ширина поля
-        this.fieldHeight = 50; // Высота поля
+        this.fieldWidth = 150; // Ширина поля
+        this.fieldHeight = 100; // Высота поля
+        this.offsetX = Math.floor((this.gridManager.stage.width() / this.gridManager.totalSize - this.fieldWidth) / 2); // Смещение по X
+        this.offsetY = Math.floor((this.gridManager.stage.height() / this.gridManager.totalSize - this.fieldHeight) / 2); // Смещение по Y
     }
 
     start() {
         if (!this.isRunning) {
             this.isRunning = true;
             this.resetGame();
+            this.drawFieldBorder(); // Рисуем границы поля
             this.bindMouseEvents();
             this.interval = setInterval(() => this.update(), this.speed);
         }
@@ -45,6 +48,30 @@ export class PingPong extends BaseModule {
         this.score = 0;
         this.gridManager.selectedTiles = {};
         this.gridManager.updateVisibleTiles();
+        this.drawFieldBorder(); // Рисуем границы поля заново
+    }
+
+    drawFieldBorder() {
+        // Очищаем предыдущие границы
+        for (let x = 0; x < this.gridManager.stage.width() / this.gridManager.totalSize; x++) {
+            for (let y = 0; y < this.gridManager.stage.height() / this.gridManager.totalSize; y++) {
+                const key = `${x},${y}`;
+                if (this.gridManager.selectedTiles[key] && this.gridManager.selectedTiles[key].type === '#CCCCCC') {
+                    delete this.gridManager.selectedTiles[key];
+                }
+            }
+        }
+
+        // Рисуем новые границы
+        for (let x = this.offsetX; x < this.offsetX + this.fieldWidth; x++) {
+            this.gridManager.selectedTiles[`${x},${this.offsetY}`] = { type: '#CCCCCC' }; // Верхняя граница
+            this.gridManager.selectedTiles[`${x},${this.offsetY + this.fieldHeight - 1}`] = { type: '#CCCCCC' }; // Нижняя граница
+        }
+        for (let y = this.offsetY; y < this.offsetY + this.fieldHeight; y++) {
+            this.gridManager.selectedTiles[`${this.offsetX},${y}`] = { type: '#CCCCCC' }; // Левая граница
+            this.gridManager.selectedTiles[`${this.offsetX + this.fieldWidth - 1},${y}`] = { type: '#CCCCCC' }; // Правая граница
+        }
+        this.gridManager.updateVisibleTiles();
     }
 
     bindMouseEvents() {
@@ -52,14 +79,14 @@ export class PingPong extends BaseModule {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
 
-            const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
+            const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
             this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width));
         });
     }
 
     update() {
         // Очищаем старое положение мяча
-        delete this.gridManager.selectedTiles[`${this.ball.x},${this.ball.y}`];
+        delete this.gridManager.selectedTiles[`${this.offsetX + this.ball.x},${this.offsetY + this.ball.y}`];
 
         // Обновляем положение мяча
         this.ball.x += this.ball.dx;
@@ -89,11 +116,16 @@ export class PingPong extends BaseModule {
         }
 
         // Рисуем мяч
-        this.gridManager.selectedTiles[`${this.ball.x},${this.ball.y}`] = { type: '#FFFF00' }; // Жёлтый цвет
+        this.gridManager.selectedTiles[`${this.offsetX + this.ball.x},${this.offsetY + this.ball.y}`] = { type: '#FFFF00' }; // Жёлтый цвет
+
+        // Очищаем старую позицию платформы
+        for (let i = 0; i < this.platform.width; i++) {
+            delete this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`];
+        }
 
         // Рисуем платформу
         for (let i = 0; i < this.platform.width; i++) {
-            this.gridManager.selectedTiles[`${this.platform.x + i},${this.fieldHeight - 1}`] = { type: '#0000FF' }; // Синий цвет
+            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`] = { type: '#0000FF' }; // Синий цвет
         }
 
         this.gridManager.updateVisibleTiles();
