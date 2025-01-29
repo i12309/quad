@@ -93,7 +93,7 @@ export class PingPong extends BaseModule {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
         this.fieldWidth = Math.floor(visibleWidth / 3);
-        this.fieldHeight = Math.floor(visibleHeight * 0.9);
+        this.fieldHeight = Math.floor(visibleHeight * 0.8);
         this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
         this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
         
