@@ -5,38 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quad</title>
     <script src="./src/konva.min.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #2C2C2C; }
-        #controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        button {
-            margin: 5px;
-            padding: 10px;
-            font-size: 16px;
-        }
-        select {
-            margin: 5px;
-            padding: 10px;
-            font-size: 16px;
-        }
-    </style>
+    <style src="./styles.css"></style>
 </head>
 <body>
-    <div id="controls">
-        <select id="game-selector">
-            <!-- Опции будут добавлены динамически -->
-        </select>
-        <button id="start-stop-btn">Старт</button>
-        <button id="clear-btn">Стереть</button>
+    <div id="start-menu">
+        <h2>Выберите игру</h2>
+        <div id="game-buttons-container"></div>
     </div>
-    <div id="container"></div>
+    
+    <div id="game-controls" style="display: none;">
+        <button id="start-stop-btn">Старт</button>
+        <button id="clear-btn">Очистить</button>
+        <button id="back-to-menu-btn">Выйти в главное меню</button>
+    </div>
+    
+    <div id="game-container">
+        <!-- Здесь будет отображаться игровое поле -->
+    </div>
 
     <!-- Подключаем модули -->
     <script type="module">

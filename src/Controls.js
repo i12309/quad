@@ -1,40 +1,66 @@
 // Файл: ./src/Controls.js
 export class Controls {
-    constructor() {
+    constructor(gridManager) {
+        this.gridManager = gridManager;
         this.modules = {}; // Хранит зарегистрированные модули
         this.currentModule = null; // Текущий выбранный модуль
         this.isRunning = false; // Флаг, указывающий, запущена ли симуляция
-        this.setupControls();
+        this.setupStartMenu();
     }
 
     registerModule(module) {
         this.modules[module.name] = module;
-        this.updateGameSelector();
+        this.updateStartMenu(); // Обновляем меню при регистрации нового модуля
     }
 
-    updateGameSelector() {
-        const gameSelector = document.getElementById('game-selector');
-        gameSelector.innerHTML = ''; // Очищаем список
+    setupStartMenu() {
+        const startMenuContainer = document.getElementById('game-buttons-container');
+        startMenuContainer.innerHTML = ''; // Очищаем контейнер
+
         for (const name in this.modules) {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            gameSelector.appendChild(option);
-        }
-        // Выбираем первый модуль по умолчанию
-        if (Object.keys(this.modules).length > 0) {
-            this.currentModule = this.modules[Object.keys(this.modules)[0]];
-            console.log(this.currentModule);
-            this.currentModule.setup(); // Вызываем setup
+            const module = this.modules[name];
+            const button = document.createElement('button');
+            button.className = 'game-button';
+            button.innerHTML = `
+                <div class="game-icon">${this.getGameIcon(name)}</div>
+                <div class="game-info">
+                    <h3>${name}</h3>
+                    <p>${this.getGameDescription(name)}</p>
+                </div>
+            `;
+            button.addEventListener('click', () => this.selectGame(module));
+            startMenuContainer.appendChild(button);
         }
     }
 
-    setupControls() {
+    updateStartMenu() {
+        this.setupStartMenu(); // Пересоздаём меню
+    }
+
+    selectGame(module) {
+        this.currentModule = module;
+
+        // Удаляем старые обработчики событий
+        if (this.gridManager.stage) {
+            this.gridManager.stage.off();
+        }
+
+        // Инициализируем новую игру
+        this.currentModule.setup();
+
+        // Скрываем стартовое меню и показываем кнопки управления
+        document.getElementById('start-menu').style.display = 'none';
+        document.getElementById('game-controls').style.display = 'block';
+
+        // Настройка кнопок управления
+        this.setupGameControls();
+    }
+
+    setupGameControls() {
         const startStopButton = document.getElementById('start-stop-btn');
         const clearButton = document.getElementById('clear-btn');
-        const gameSelector = document.getElementById('game-selector');
+        const backToMenuButton = document.getElementById('back-to-menu-btn');
 
-        // Обработчик кнопки "Старт/Стоп"
         startStopButton.addEventListener('click', () => {
             if (this.isRunning) {
                 this.currentModule.pause();
@@ -46,7 +72,6 @@ export class Controls {
             this.isRunning = !this.isRunning;
         });
 
-        // Обработчик кнопки "Очистить"
         clearButton.addEventListener('click', () => {
             this.currentModule.pause();
             this.currentModule.clear();
@@ -54,11 +79,46 @@ export class Controls {
             this.isRunning = false;
         });
 
-        // Обработчик изменения выбора в ниспадающем списке
-        gameSelector.addEventListener('change', (event) => {
-            this.currentModule.clear();
-            this.currentModule = this.modules[event.target.value]; // Обновляем текущий модуль
-            this.currentModule.setup(); // Вызываем setup для нового модуля
-        });
+        backToMenuButton.addEventListener('click', () => this.backToMainMenu());
+    }
+
+    backToMainMenu() {
+        if (this.currentModule) {
+            this.currentModule.pause(); // Останавливаем игру
+            this.currentModule.clear(); // Очищаем игровое поле
+            this.gridManager.stage.off(); // Удаляем все обработчики событий
+        }
+
+        // Скрываем кнопки управления и показываем главное меню
+        document.getElementById('game-controls').style.display = 'none';
+        document.getElementById('start-menu').style.display = 'block';
+
+        // Сбрасываем текущий модуль
+        this.currentModule = null;
+        this.isRunning = false;
+    }
+
+    getGameIcon(name) {
+        // Возвращаем иконку для игры (можно заменить на реальные иконки)
+        switch (name) {
+            case 'GameOfLife':
+                return '🎮';
+            case 'PingPong':
+                return '🏓';
+            default:
+                return '❓';
+        }
+    }
+
+    getGameDescription(name) {
+        // Возвращаем описание для игры
+        switch (name) {
+            case 'GameOfLife':
+                return 'Классическая игра "Жизнь". Наблюдайте за эволюцией клеток.';
+            case 'PingPong':
+                return 'Игра в пинг-понг. Управляйте платформой и ловите мяч.';
+            default:
+                return 'Описание недоступно.';
+        }
     }
 }
