@@ -52,6 +52,7 @@ export class PingPong extends BaseModule {
     }
 
     start() {
+        this.resetGame();
         if (!this.isRunning) {
             this.isRunning = true;
             this.interval = setInterval(() => this.update(), this.speed);
