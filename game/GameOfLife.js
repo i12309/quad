@@ -114,11 +114,11 @@ export class GameOfLife extends BaseModule {
 
     bindMouseEvents() {
         this.gridManager.stage.on('click', (event) => {
-            const pos = gridManager.stage.getPointerPosition();
+            const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
 
-            const x = Math.floor((pos.x - gridManager.stage.x()) / gridManager.totalSize);
-            const y = Math.floor((pos.y - gridManager.stage.y()) / gridManager.totalSize);
+            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
+            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize);
 
             if (event.evt.button === 0) {
                 this.handleLeftClick(x, y);
