@@ -65,6 +65,17 @@
             console.log('Модуль PingPong не найден. Продолжаем без него.');
         });
 
+        import('./game/Tetris.js')
+        .then((module) => {
+            const Tetris = module.Tetris;
+            const tetris = new Tetris(gridManager);
+            controls.registerModule(tetris);
+            controls.currentModule = tetris;
+        })
+        .catch((error) => {
+            console.log('Модуль Tetris не найден. Продолжаем без него.');
+        });
+
     </script>
 </body>
 </html>
