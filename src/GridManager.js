@@ -25,7 +25,7 @@ export class GridManager {
         let tile;
         if (this.tilePool.length > 0) {
             tile = this.tilePool.pop();
-            console.log(tile);
+            alert(tile);
             tile.setAttrs({
                 id: `${x},${y}`,
                 x: x * this.totalSize,
