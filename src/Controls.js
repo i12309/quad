@@ -5,16 +5,16 @@ export class Controls {
         this.modules = {}; // Хранит зарегистрированные модули
         this.currentModule = null; // Текущий выбранный модуль
         this.isRunning = false; // Флаг, указывающий, запущена ли симуляция
-        this.setupStartMenu();
-        this.SetButtons();
+        this.setupMenu();
+        this.setupButtons();
     }
 
     registerModule(module) {
         this.modules[module.name] = module;
-        this.setupStartMenu(); // Пересоздаём меню
+        this.setupMenu(); // Пересоздаём меню
     }
 
-    setupStartMenu() {
+    setupMenu() {
         const startMenuContainer = document.getElementById('game-buttons-container');
         startMenuContainer.innerHTML = ''; // Очищаем контейнер
 
@@ -45,12 +45,12 @@ export class Controls {
         document.getElementById('game-controls').style.display = 'block';
     }
 
-    SetButtons() {
+    setupButtons() {
         // Настройка кнопок управления
         const startStopButton = document.getElementById('start-stop-btn');
         const clearButton = document.getElementById('clear-btn');
         const backToMenuButton = document.getElementById('back-to-menu-btn');
-        
+
         startStopButton.addEventListener('click', () => {
             if (this.isRunning) {
                 this.currentModule.pause();
