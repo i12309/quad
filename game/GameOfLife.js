@@ -94,7 +94,7 @@ export class GameOfLife extends BaseModule {
     }
 
     handleRightClick(x, y) {
-        this.showContextMenu(x, y);
+
     }
 
     bindMouseEvents() {
@@ -114,17 +114,7 @@ export class GameOfLife extends BaseModule {
     }
 
     showContextMenu(x, y) {
-        const contextMenu = document.createElement('div');
-        contextMenu.style.position = 'absolute';
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        contextMenu.style.backgroundColor = '#fff';
-        contextMenu.style.border = '1px solid #ccc';
-        contextMenu.style.padding = '5px';
-        contextMenu.innerHTML = '<p>Контекстное меню</p>';
-        document.body.appendChild(contextMenu);
 
-        document.addEventListener('click', () => contextMenu.remove(), { once: true });
     }
 
     setup() {
