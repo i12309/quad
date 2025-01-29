@@ -44,7 +44,6 @@ export class GameOfLife extends BaseModule {
         return count;
     }
 
-    /*
     updateGame() {
         const newSelectedTiles = {};
         const cellsToCheck = new Set();
@@ -68,11 +67,13 @@ export class GameOfLife extends BaseModule {
 
             if (this.gridManager.selectedTiles[key]) {
                 if (neighbors === 2 || neighbors === 3) {
-                    newSelectedTiles[key] = true;
+                    //newSelectedTiles[key] = true;
+                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
                 }
             } else {
                 if (neighbors === 3) {
                     newSelectedTiles[key] = true;
+                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
                 }
             }
         });
@@ -81,27 +82,7 @@ export class GameOfLife extends BaseModule {
         Object.assign(this.gridManager.selectedTiles, newSelectedTiles);
         this.gridManager.updateVisibleTiles();
     }
-        */
 
-    updateGame() {
-        const newSelectedTiles = {};
-        const cellsToCheck = new Set(Object.keys(this.gridManager.selectedTiles));
-        for (const key of cellsToCheck) {
-            const [x, y] = key.split(',').map(Number);
-            const neighbors = this.countNeighbors(x, y);
-            if (this.gridManager.selectedTiles[key]) {
-                if (neighbors === 2 || neighbors === 3) {
-                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
-                }
-            } else {
-                if (neighbors === 3) {
-                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
-                }
-            }
-        }
-        this.gridManager.selectedTiles = newSelectedTiles;
-        this.gridManager.updateVisibleTiles();
-    }
 
     randomize() {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize) + 1;
