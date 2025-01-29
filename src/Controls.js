@@ -24,6 +24,7 @@ export class Controls {
         // Выбираем первый модуль по умолчанию
         if (Object.keys(this.modules).length > 0) {
             this.currentModule = this.modules[Object.keys(this.modules)[0]];
+            console.log(this.currentModule);
             this.currentModule.setup(); // Вызываем setup
         }
     }
