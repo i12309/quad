@@ -81,7 +81,7 @@ export class PingPong extends BaseModule {
             const oldPlatformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
             //console.log(this.gridManager.selectedTiles[oldPlatformKey]);
             //delete this.gridManager.selectedTiles[oldPlatformKey];
-            this.gridManager.selectedTiles[platformKey] = { type: 'none', color: this.gridManager.backgroundColor };
+            this.gridManager.selectedTiles[oldPlatformKey] = { type: 'none', color: this.gridManager.backgroundColor };
             //console.log(this.gridManager.selectedTiles[oldPlatformKey]);
         }
 
