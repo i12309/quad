@@ -16,8 +16,6 @@ export class PingPong extends BaseModule {
         this.fieldHeight = 0;
         this.offsetX = 0;
         this.offsetY = 0;
-        this.calculateFieldDimensions();
-        this.bindMouseEvents(gridManager);
     }
 
     calculateFieldDimensions() {
@@ -29,11 +27,30 @@ export class PingPong extends BaseModule {
         this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
     }
 
+    drawFieldBorder() {
+        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
+            for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
+                const key = `${x},${y}`;
+                if (x === this.offsetX - 1 || x === this.offsetX + this.fieldWidth ||
+                    y === this.offsetY - 1 || y === this.offsetY + this.fieldHeight) {
+                    this.gridManager.selectedTiles[key] = { type: 'wall', color: '#CCCCCC' };
+                }
+            }
+        }
+        this.gridManager.updateVisibleTiles();
+    }
+
+    resetGame() {
+        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
+        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
+        this.score = 0;
+        this.gridManager.selectedTiles = {};
+        this.drawFieldBorder();
+    }
+
     start() {
         if (!this.isRunning) {
             this.isRunning = true;
-            this.resetGame();
-            this.drawFieldBorder();
             this.interval = setInterval(() => this.update(), this.speed);
         }
     }
@@ -141,5 +158,11 @@ export class PingPong extends BaseModule {
         document.body.appendChild(contextMenu);
 
         document.addEventListener('click', () => contextMenu.remove(), { once: true });
+    }
+
+    setup() {
+        this.calculateFieldDimensions(); // Рассчитываем размеры поля
+        this.bindMouseEvents(); // Привязываем события мыши
+        this.resetGame(); // Инициализируем игру
     }
 }

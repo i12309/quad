@@ -51,7 +51,7 @@ export class BaseModule {
         throw new Error('Метод showContextMenu должен быть реализован');
     }
 
-    setup(gridManager) {
+    setup() {
         throw new Error('Метод setup должен быть реализован');
     }
 

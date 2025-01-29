@@ -127,9 +127,8 @@ export class GameOfLife extends BaseModule {
         document.addEventListener('click', () => contextMenu.remove(), { once: true });
     }
 
-    setup(gridManager) {
-        this.gridManager = gridManager;
-        this.bindMouseEvents(gridManager);
+    setup() {
+        this.bindMouseEvents(); // Привязываем события мыши
         this.clear(); // Очищаем поле при настройке
     }
 }
