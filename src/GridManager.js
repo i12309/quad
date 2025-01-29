@@ -48,11 +48,12 @@ export class GridManager {
         const visibleHeight = Math.ceil(this.stage.height() / this.totalSize) + 1;
         const startX = Math.floor(-this.stage.x() / this.totalSize);
         const startY = Math.floor(-this.stage.y() / this.totalSize);
-
+        let c=0;
         for (let x = startX; x < startX + visibleWidth; x++) {
             for (let y = startY; y < startY + visibleHeight; y++) {
                 const cellKey = `${x},${y}`;
                 // Создаем тайл только если он есть в selectedTiles
+                c++;
                 if (this.selectedTiles[cellKey]) {
                     const tile = this.createTile(x, y);
                     this.layer.add(tile);
@@ -61,7 +62,7 @@ export class GridManager {
                 //this.layer.add(tile);
             }
         }
-        
+        console.log(c);
 
         this.layer.batchDraw();
     }
