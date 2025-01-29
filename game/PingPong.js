@@ -77,14 +77,14 @@ export class PingPong extends BaseModule {
 
         for (let i = 0; i < this.platform.width; i++) {
             const oldPlatformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
-            console.log(this.gridManager.selectedTiles[oldPlatformKey]);
+            //console.log(this.gridManager.selectedTiles[oldPlatformKey]);
             delete this.gridManager.selectedTiles[oldPlatformKey];
-            console.log(this.gridManager.selectedTiles[oldPlatformKey]);
+            //console.log(this.gridManager.selectedTiles[oldPlatformKey]);
         }
 
         for (let i = 0; i < this.platform.width; i++) {
             const platformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
-            this.gridManager.selectedTiles[platformKey] = { type: 'platform', color: '#0000FF' };
+            //this.gridManager.selectedTiles[platformKey] = { type: 'platform', color: '#0000FF' };
         }
 
         this.gridManager.updateVisibleTiles();
