@@ -36,7 +36,6 @@ export class PingPong extends BaseModule {
             this.isRunning = false;
             clearInterval(this.interval);
         }
-        console.log(this.gridManager.selectedTiles);
     }
 
     clear() {
@@ -77,17 +76,13 @@ export class PingPong extends BaseModule {
 
         const ballKey = `${this.offsetX + this.ball.x},${this.offsetY + this.ball.y}`;
         this.gridManager.selectedTiles[ballKey] = { type: 'ball', color: '#FFFF00' };
-/*
-        for (let i = 0; i < this.platform.width; i++) {
-            const oldPlatformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
-            delete this.gridManager.selectedTiles[oldPlatformKey];
-        }*/
-// Удалить все ячейки с type === 'platform'
-Object.keys(this.gridManager.selectedTiles).forEach((key) => {
-    if (this.gridManager.selectedTiles[key].type === 'platform') {
-        delete this.gridManager.selectedTiles[key];
-    }
-});
+
+        // Удалить все ячейки с type === 'platform'
+        Object.keys(this.gridManager.selectedTiles).forEach((key) => {
+            if (this.gridManager.selectedTiles[key].type === 'platform') {
+                delete this.gridManager.selectedTiles[key];
+            }
+        });
 
         for (let i = 0; i < this.platform.width; i++) {
             const platformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
