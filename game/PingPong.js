@@ -18,26 +18,8 @@ export class PingPong extends BaseModule {
         this.offsetY = 0;
     }
 
-    calculateFieldDimensions() {
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        this.fieldWidth = Math.floor(visibleWidth / 3);
-        this.fieldHeight = Math.floor(visibleHeight * 0.9);
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
-    }
-
-    drawFieldBorder() {
-        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
-            for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
-                const key = `${x},${y}`;
-                if (x === this.offsetX - 1 || x === this.offsetX + this.fieldWidth ||
-                    y === this.offsetY - 1 || y === this.offsetY + this.fieldHeight) {
-                    this.gridManager.selectedTiles[key] = { type: 'wall', color: '#CCCCCC' };
-                }
-            }
-        }
-        this.gridManager.updateVisibleTiles();
+    setup() {
+        this.clear(); // Инициализируем игру
     }
 
     start() {
@@ -109,16 +91,26 @@ export class PingPong extends BaseModule {
         this.gridManager.updateVisibleTiles();
     }
 
-    toggleCell(x, y) {
-        // В PingPong нет необходимости переключать клетки
+    calculateFieldDimensions() {
+        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+        this.fieldWidth = Math.floor(visibleWidth / 3);
+        this.fieldHeight = Math.floor(visibleHeight * 0.9);
+        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
     }
 
-    handleLeftClick(x, y) {
-        // В PingPong левый клик не используется
-    }
-
-    handleRightClick(x, y) {
-        this.showContextMenu(x, y);
+    drawFieldBorder() {
+        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
+            for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
+                const key = `${x},${y}`;
+                if (x === this.offsetX - 1 || x === this.offsetX + this.fieldWidth ||
+                    y === this.offsetY - 1 || y === this.offsetY + this.fieldHeight) {
+                    this.gridManager.selectedTiles[key] = { type: 'wall', color: '#CCCCCC' };
+                }
+            }
+        }
+        this.gridManager.updateVisibleTiles();
     }
 
     bindMouseEvents() {
@@ -146,20 +138,18 @@ export class PingPong extends BaseModule {
     }
 
     showContextMenu(x, y) {
-        const contextMenu = document.createElement('div');
-        contextMenu.style.position = 'absolute';
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        contextMenu.style.backgroundColor = '#fff';
-        contextMenu.style.border = '1px solid #ccc';
-        contextMenu.style.padding = '5px';
-        contextMenu.innerHTML = '<p>Контекстное меню</p>';
-        document.body.appendChild(contextMenu);
 
-        document.addEventListener('click', () => contextMenu.remove(), { once: true });
     }
 
-    setup() {
-        this.clear(); // Инициализируем игру
+    toggleCell(x, y) {
+        // В PingPong нет необходимости переключать клетки
+    }
+
+    handleLeftClick(x, y) {
+        // В PingPong левый клик не используется
+    }
+
+    handleRightClick(x, y) {
+        //this.showContextMenu(x, y);
     }
 }
