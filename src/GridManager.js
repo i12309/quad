@@ -46,8 +46,6 @@ export class GridManager {
                 id: `${x},${y}`,
                 x: x * this.totalSize,
                 y: y * this.totalSize,
-                width: this.tileSize,
-                height: this.tileSize,
                 fill: this.backgroundColor,
                 visible: true,
             });
@@ -67,10 +65,10 @@ export class GridManager {
                 this.toggleCell(x, y);
             });
         }
-    
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
-            tile.fill(this.selectedTiles[cellKey].color);
+            //tile.fill(this.selectedTiles[cellKey].type === 'gray' ? this.selectedColor : this.yellowColor);
+            tile.fill(this.selectedColor);
         }
         return tile;
     }
