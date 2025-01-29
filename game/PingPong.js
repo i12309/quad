@@ -126,19 +126,18 @@ export class PingPong extends BaseModule {
         this.gridManager.stage.on('mousemove', (event) => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
-    
-            // Преобразуем координаты мыши в координаты сетки
-            const platformX = Math.floor(pos.x / this.gridManager.totalSize) - this.offsetX;
+
+            const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
             this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width));
         });
-    
+
         this.gridManager.stage.on('click', (event) => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
-    
-            const x = Math.floor(pos.x / this.gridManager.totalSize);
-            const y = Math.floor(pos.y / this.gridManager.totalSize);
-    
+
+            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
+            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize);
+
             if (event.evt.button === 0) {
                 this.handleLeftClick(x, y);
             } else if (event.evt.button === 2) {
