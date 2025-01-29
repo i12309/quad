@@ -145,7 +145,7 @@ export class GameOfLife extends BaseModule {
                     this.gridManager.stage.x(this.gridManager.stage.x() + dx);
                     this.gridManager.stage.y(this.gridManager.stage.y() + dy);
                     this.lastPointerPosition = pos;
-                    this.gridManager.scheduleUpdate(); // Используем scheduleUpdate для пакетной отрисовки
+                    this.gridManager.updateVisibleTiles(); 
                 }
             }
         });
@@ -171,7 +171,7 @@ export class GameOfLife extends BaseModule {
         window.addEventListener('resize', () => {
             this.gridManager.stage.width(window.innerWidth);
             this.gridManager.stage.height(window.innerHeight);
-            this.gridManager.scheduleUpdate(); // Используем scheduleUpdate для пакетной отрисовки
+            this.gridManager.schupdateVisibleTileseduleUpdate(); 
         });
 
         // Обработка нажатия клавиш
@@ -206,7 +206,7 @@ export class GameOfLife extends BaseModule {
         if (this.keys.ArrowDown) {
             this.gridManager.stage.y(this.gridManager.stage.y() - moveStep);
         }
-        this.gridManager.scheduleUpdate(); // Используем scheduleUpdate для пакетной отрисовки
+        this.gridManager.updateVisibleTiles();
     }
 
     showContextMenu(x, y) {
