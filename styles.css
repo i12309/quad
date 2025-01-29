@@ -27,41 +27,51 @@ select {
     margin-top: 50px;
 }
 
+/* Файл: styles.css */
+#game-buttons-container {
+    display: flex;
+    flex-direction: column; /* Располагаем элементы по вертикали */
+    align-items: center; /* Выравниваем кнопки по центру */
+    gap: 10px; /* Добавляем отступ между кнопками */
+}
+
 .game-button {
-    display: inline-flex;
-    align-items: center;
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: #f9f9f9;
-    transition: background-color 0.3s;
+    display: flex;
+    align-items: center; /* Выравниваем содержимое кнопки по центру */
+    justify-content: flex-start; /* Текст и иконка выровнены слева */
+    width: 300px; /* Фиксированная ширина кнопки */
+    padding: 15px; /* Внутренние отступы */
+    border: 1px solid #ccc; /* Граница кнопки */
+    border-radius: 5px; /* Закругление углов */
+    background-color: #f9f9f9; /* Цвет фона */
+    cursor: pointer; /* Курсор указывает на кликабельность */
+    transition: background-color 0.3s, transform 0.3s; /* Плавные переходы */
+    text-align: left; /* Текст внутри кнопки выровнен слева */
 }
 
 .game-button:hover {
-    background-color: #e0e0e0;
+    background-color: #e0e0e0; /* Цвет фона при наведении */
+    transform: scale(1.02); /* Лёгкое увеличение при наведении */
 }
 
 .game-icon {
-    font-size: 48px;
-    margin-right: 10px;
+    font-size: 48px; /* Размер иконки */
+    margin-right: 15px; /* Отступ между иконкой и текстом */
 }
 
 .game-info {
-    text-align: left;
+    text-align: left; /* Текст внутри кнопки выровнен слева */
 }
 
-#game-controls {
-    text-align: center;
-    margin-top: 20px;
+.game-info h3 {
+    margin: 0; /* Убираем отступы у заголовка */
+    font-size: 18px; /* Размер заголовка */
 }
 
-#game-controls button {
-    margin: 5px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+.game-info p {
+    margin: 5px 0 0; /* Отступы для описания */
+    font-size: 14px; /* Размер текста описания */
+    color: #666; /* Цвет текста описания */
 }
 
 /* Файл: styles.css */
