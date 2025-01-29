@@ -135,6 +135,7 @@ export class PingPong extends BaseModule {
         // Очищаем старую позицию платформы
         for (let i = 0; i < this.platform.width; i++) {
             delete this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`]; // На 4 клетки выше
+            console.log(this.gridManager.selectedTiles);
         }
 
         // Рисуем платформу
