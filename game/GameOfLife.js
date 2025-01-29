@@ -113,6 +113,7 @@ export class GameOfLife extends BaseModule {
     }
 
     bindMouseEvents() {
+        this.gridManager.stage.off();
         this.gridManager.stage.on('click', (event) => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;

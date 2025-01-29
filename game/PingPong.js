@@ -113,6 +113,7 @@ export class PingPong extends BaseModule {
     }
 
     bindMouseEvents() {
+        this.gridManager.stage.off();
         this.gridManager.stage.on('mousemove', (event) => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
