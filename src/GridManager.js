@@ -23,29 +23,17 @@ export class GridManager {
 
     createTile(x, y) {
         let tile;
-        if (this.tilePool.length > 0) {
-            tile = this.tilePool.pop();
-            alert(tile);
-            tile.setAttrs({
-                id: `${x},${y}`,
-                x: x * this.totalSize,
-                y: y * this.totalSize,
-                fill: this.backgroundColor,
-                visible: true,
-            });
-        } else {
-            tile = new Konva.Rect({
-                id: `${x},${y}`,
-                x: x * this.totalSize,
-                y: y * this.totalSize,
-                width: this.tileSize,
-                height: this.tileSize,
-                fill: this.backgroundColor,
-                stroke: null,
-                strokeWidth: 0,
-                listening: true,
-            });
-        }
+        tile = new Konva.Rect({
+            id: `${x},${y}`,
+            x: x * this.totalSize,
+            y: y * this.totalSize,
+            width: this.tileSize,
+            height: this.tileSize,
+            fill: this.backgroundColor,
+            stroke: null,
+            strokeWidth: 0,
+            listening: true,
+        });
 
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
