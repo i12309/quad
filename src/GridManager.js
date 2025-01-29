@@ -25,6 +25,7 @@ export class GridManager {
         let tile;
         if (this.tilePool.length > 0) {
             tile = this.tilePool.pop();
+            console.log(tile);
             tile.setAttrs({
                 id: `${x},${y}`,
                 x: x * this.totalSize,
@@ -59,15 +60,13 @@ export class GridManager {
         const visibleHeight = Math.ceil(this.stage.height() / this.totalSize) + 1;
         const startX = Math.floor(-this.stage.x() / this.totalSize);
         const startY = Math.floor(-this.stage.y() / this.totalSize);
-let c=0
+
         for (let x = startX; x < startX + visibleWidth; x++) {
             for (let y = startY; y < startY + visibleHeight; y++) {
                 const tile = this.createTile(x, y);
                 this.layer.add(tile);
-                c++;
             }
         }
-        console.log(c);
         
 
         this.layer.batchDraw();
