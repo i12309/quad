@@ -54,17 +54,6 @@
         // Модули игр =====================================================
 
         // Динамическая загрузка PhysicsSimulation (опциональный модуль)
-        import('./game/PhysicsSimulation.js')
-        .then((module) => {
-            const PhysicsSimulation = module.PhysicsSimulation;
-            const physicsSimulation = new PhysicsSimulation(gridManager);
-            controls.registerModule(physicsSimulation);
-        })
-        .catch((error) => {
-            console.log('Модуль PhysicsSimulation не найден. Продолжаем без него.');
-        });
-
-        // Динамическая загрузка PhysicsSimulation (опциональный модуль)
         import('./game/GameOfLife.js')
         .then((module) => {
             const GameOfLife = module.GameOfLife;
@@ -73,16 +62,6 @@
         })
         .catch((error) => {
             console.log('Модуль gameOfLife не найден. Продолжаем без него.');
-        });
-
-        import('./game/ColorSpread.js')
-        .then((module) => {
-            const ColorSpread = module.ColorSpread;
-            const colorSpread = new ColorSpread(gridManager);
-            controls.registerModule(colorSpread);
-        })
-        .catch((error) => {
-            console.log('Модуль ColorSpread не найден. Продолжаем без него.');
         });
 
         import('./game/PingPong.js')
