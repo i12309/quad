@@ -54,6 +54,7 @@ export class Controls {
 
         // Обработчик изменения выбора в ниспадающем списке
         gameSelector.addEventListener('change', (event) => {
+            this.currentModule.clear();
             this.currentModule = this.modules[event.target.value]; // Обновляем текущий модуль
             this.currentModule.setup(); // Вызываем setup для нового модуля
         });
