@@ -10,7 +10,7 @@ export class Controls {
 
     registerModule(module) {
         this.modules[module.name] = module;
-        this.updateStartMenu(); // Обновляем меню при регистрации нового модуля
+        this.setupStartMenu(); // Пересоздаём меню
     }
 
     setupStartMenu() {
@@ -33,10 +33,6 @@ export class Controls {
         }
     }
 
-    updateStartMenu() {
-        this.setupStartMenu(); // Пересоздаём меню
-    }
-
     selectGame(module) {
         this.currentModule = module;
 
@@ -48,10 +44,6 @@ export class Controls {
         document.getElementById('game-controls').style.display = 'block';
 
         // Настройка кнопок управления
-        this.setupGameControls();
-    }
-
-    setupGameControls() {
         const startStopButton = document.getElementById('start-stop-btn');
         const clearButton = document.getElementById('clear-btn');
         const backToMenuButton = document.getElementById('back-to-menu-btn');
