@@ -4,6 +4,8 @@ import { BaseModule } from './BaseModule.js';
 export class PingPong extends BaseModule {
     constructor(gridManager) {
         super();
+        this.gameIcon = '🏓';
+        this.gameDescription = 'Игра в пинг-понг. Управляйте платформой и ловите мяч.';
         this.name = 'PingPong';
         this.gridManager = gridManager;
         this.isRunning = false;

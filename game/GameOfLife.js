@@ -4,6 +4,8 @@ import { BaseModule } from './BaseModule.js';
 export class GameOfLife extends BaseModule {
     constructor(gridManager) {
         super();
+        this.gameIcon = '🎮';
+        this.gameDescription = 'Классическая игра "Жизнь". Наблюдайте за эволюцией клеток.';
         this.name = 'GameOfLife';
         this.gridManager = gridManager;
         this.isRunning = false;

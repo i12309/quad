@@ -23,10 +23,10 @@ export class Controls {
             const button = document.createElement('button');
             button.className = 'game-button';
             button.innerHTML = `
-                <div class="game-icon">${this.getGameIcon(name)}</div>
+                <div class="game-icon">${module.gameIcon}</div>
                 <div class="game-info">
                     <h3>${name}</h3>
-                    <p>${this.getGameDescription(name)}</p>
+                    <p>${module.gameDescription}</p>
                 </div>
             `;
             button.addEventListener('click', () => this.selectGame(module));
