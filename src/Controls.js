@@ -40,11 +40,6 @@ export class Controls {
     selectGame(module) {
         this.currentModule = module;
 
-        // Удаляем старые обработчики событий
-        if (this.gridManager.stage) {
-            this.gridManager.stage.off();
-        }
-
         // Инициализируем новую игру
         this.currentModule.setup();
 
@@ -86,7 +81,6 @@ export class Controls {
         if (this.currentModule) {
             this.currentModule.pause(); // Останавливаем игру
             this.currentModule.clear(); // Очищаем игровое поле
-            this.gridManager.stage.off(); // Удаляем все обработчики событий
         }
 
         // Скрываем кнопки управления и показываем главное меню
