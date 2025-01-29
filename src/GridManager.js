@@ -22,24 +22,18 @@ export class GridManager {
     }
 
     createTile(x, y) {
-        let tile;
-        tile = new Konva.Rect({
-            id: `${x},${y}`,
+        const cellKey = `${x},${y}`;
+        return new Konva.Rect({
+            id: cellKey,
             x: x * this.totalSize,
             y: y * this.totalSize,
             width: this.tileSize,
             height: this.tileSize,
-            fill: this.backgroundColor,
+            fill: this.selectedTiles[cellKey].color, // Цвет берем из selectedTiles
             stroke: null,
             strokeWidth: 0,
             listening: true,
         });
-
-        const cellKey = `${x},${y}`;
-        if (this.selectedTiles[cellKey]) {
-            tile.fill(this.selectedTiles[cellKey].color);
-        }
-        return tile;
     }
 
     updateVisibleTiles() {
@@ -48,22 +42,16 @@ export class GridManager {
         const visibleHeight = Math.ceil(this.stage.height() / this.totalSize) + 1;
         const startX = Math.floor(-this.stage.x() / this.totalSize);
         const startY = Math.floor(-this.stage.y() / this.totalSize);
-        let c=0;
         for (let x = startX; x < startX + visibleWidth; x++) {
             for (let y = startY; y < startY + visibleHeight; y++) {
                 const cellKey = `${x},${y}`;
                 // Создаем тайл только если он есть в selectedTiles
-                
                 if (this.selectedTiles[cellKey]) {
                     const tile = this.createTile(x, y);
                     this.layer.add(tile);
-                    c++;
                 }
-                //const tile = this.createTile(x, y);
-                //this.layer.add(tile);
             }
         }
-        console.log(c);
 
         this.layer.batchDraw();
     }
