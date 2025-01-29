@@ -96,7 +96,7 @@ export class GridManager {
             }*/
         } else {
             // Создаем новую серую клетку
-            this.selectedTiles[cellKey] = { type: 'gray' };
+            this.selectedTiles[cellKey] = { type: 'none', color: this.selectedColor };
             tile.fill(this.selectedColor);
         }
         this.scheduleUpdate();
@@ -163,8 +163,7 @@ export class GridManager {
         if (!tile) return;
         if (action === 'draw') {
             //this.selectedTiles[cellKey] = { type: 'gray' };
-            this.selectedTiles[cellKey].type = 'none'; // Меняем тип
-            this.selectedTiles[cellKey].color = this.selectedColor;
+            this.selectedTiles[cellKey] = { type: 'none', color: this.selectedColor };
             tile.fill(this.selectedColor);
         } else if (action === 'erase') {
             delete this.selectedTiles[cellKey];
