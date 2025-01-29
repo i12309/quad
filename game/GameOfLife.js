@@ -97,8 +97,8 @@ export class GameOfLife extends BaseModule {
         this.showContextMenu(x, y);
     }
 
-    bindMouseEvents(gridManager) {
-        gridManager.stage.on('click', (event) => {
+    bindMouseEvents() {
+        this.gridManager.stage.on('click', (event) => {
             const pos = gridManager.stage.getPointerPosition();
             if (!pos) return;
 
