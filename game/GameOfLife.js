@@ -171,7 +171,7 @@ export class GameOfLife extends BaseModule {
         window.addEventListener('resize', () => {
             this.gridManager.stage.width(window.innerWidth);
             this.gridManager.stage.height(window.innerHeight);
-            this.gridManager.schupdateVisibleTileseduleUpdate(); 
+            this.gridManager.updateVisibleTiles(); 
         });
 
         // Обработка нажатия клавиш
