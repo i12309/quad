@@ -18,7 +18,7 @@ export class GridManager {
         });
         this.layer = new Konva.Layer();
         this.stage.add(this.layer);
-        this.selectedTiles = {}; // Хранит состояние клеток: { "x,y": { type: 'gray' | 'yellow' } }
+        this.selectedTiles = {}; // Хранит состояние клеток: { "x,y": { type: '', color: '' } }
         this.isDrawing = false;
         this.currentAction = null; // 'draw' или 'erase'
         this.tilePool = [];

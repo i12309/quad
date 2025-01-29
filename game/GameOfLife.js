@@ -13,7 +13,7 @@ export class GameOfLife extends BaseModule {
     start() {
         if (!this.isRunning) {
             this.isRunning = true;
-            this.interval = setInterval(() => this.updateGame(), 100);
+            this.interval = setInterval(() => this.update(), 100);
         }
     }
 
@@ -25,26 +25,11 @@ export class GameOfLife extends BaseModule {
     }
 
     clear() {
-        this.gridManager.selectedTiles = {}; // Очищаем массив клеток
-        this.gridManager.updateVisibleTiles(); // Перерисовываем поле
+        this.gridManager.selectedTiles = {};
+        this.gridManager.updateVisibleTiles();
     }
 
-    countNeighbors(x, y) {
-        let count = 0;
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                if (dx === 0 && dy === 0) continue;
-                const nx = x + dx;
-                const ny = y + dy;
-                if (this.gridManager.selectedTiles[`${nx},${ny}`]) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    updateGame() {
+    update() {
         const newSelectedTiles = {};
         const cellsToCheck = new Set();
 
@@ -64,60 +49,87 @@ export class GameOfLife extends BaseModule {
         cellsToCheck.forEach((key) => {
             const [x, y] = key.split(',').map(Number);
             const neighbors = this.countNeighbors(x, y);
-
             if (this.gridManager.selectedTiles[key]) {
                 if (neighbors === 2 || neighbors === 3) {
-                    //newSelectedTiles[key] = true;
-                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
+                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' };
                 }
             } else {
                 if (neighbors === 3) {
-                    newSelectedTiles[key] = true;
-                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
+                    newSelectedTiles[key] = { type: 'pixel', color: '#FFFF00' };
                 }
             }
         });
 
-        Object.keys(this.gridManager.selectedTiles).forEach((key) => delete this.gridManager.selectedTiles[key]);
-        Object.assign(this.gridManager.selectedTiles, newSelectedTiles);
+        this.gridManager.selectedTiles = newSelectedTiles;
         this.gridManager.updateVisibleTiles();
     }
 
-
-    randomize() {
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize) + 1;
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize) + 1;
-        const startX = Math.floor(-this.gridManager.stage.x() / this.gridManager.totalSize);
-        const startY = Math.floor(-this.gridManager.stage.y() / this.gridManager.totalSize);
-
-        for (let x = startX; x < startX + visibleWidth; x++) {
-            for (let y = startY; y < startY + visibleHeight; y++) {
-                if (Math.random() > 0.8) {
-                    this.gridManager.selectedTiles[`${x},${y}`] = true;
+    countNeighbors(x, y) {
+        let count = 0;
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx;
+                const ny = y + dy;
+                if (this.gridManager.selectedTiles[`${nx},${ny}`]) {
+                    count++;
                 }
             }
         }
-        this.gridManager.updateVisibleTiles();
+        return count;
     }
 
-
-// ========================================================
-
-
-
-    showContextMenu(x, y) {
-        // Пустое меню
-    }
-
-    handleLeftClick(x, y) {
+    toggleCell(x, y) {
         const cellKey = `${x},${y}`;
         if (this.gridManager.selectedTiles[cellKey]) {
             delete this.gridManager.selectedTiles[cellKey];
         } else {
-            this.gridManager.selectedTiles[cellKey] = { type: '#CCCCCC' }; // Светло-серый цвет
+            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: '#CCCCCC' };
         }
         this.gridManager.updateVisibleTiles();
     }
 
-    
+    handleLeftClick(x, y) {
+        this.toggleCell(x, y);
+    }
+
+    handleRightClick(x, y) {
+        this.showContextMenu(x, y);
+    }
+
+    bindMouseEvents(gridManager) {
+        gridManager.stage.on('click', (event) => {
+            const pos = gridManager.stage.getPointerPosition();
+            if (!pos) return;
+
+            const x = Math.floor((pos.x - gridManager.stage.x()) / gridManager.totalSize);
+            const y = Math.floor((pos.y - gridManager.stage.y()) / gridManager.totalSize);
+
+            if (event.evt.button === 0) {
+                this.handleLeftClick(x, y);
+            } else if (event.evt.button === 2) {
+                this.handleRightClick(x, y);
+            }
+        });
+    }
+
+    showContextMenu(x, y) {
+        const contextMenu = document.createElement('div');
+        contextMenu.style.position = 'absolute';
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.backgroundColor = '#fff';
+        contextMenu.style.border = '1px solid #ccc';
+        contextMenu.style.padding = '5px';
+        contextMenu.innerHTML = '<p>Контекстное меню</p>';
+        document.body.appendChild(contextMenu);
+
+        document.addEventListener('click', () => contextMenu.remove(), { once: true });
+    }
+
+    setup(gridManager) {
+        this.gridManager = gridManager;
+        this.bindMouseEvents(gridManager);
+        this.clear(); // Очищаем поле при настройке
+    }
 }
