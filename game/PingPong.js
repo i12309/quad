@@ -122,22 +122,23 @@ export class PingPong extends BaseModule {
         this.showContextMenu(x, y);
     }
 
-    bindMouseEvents(gridManager) {
-        gridManager.stage.on('mousemove', (event) => {
-            const pos = gridManager.stage.getPointerPosition();
+    bindMouseEvents() {
+        this.gridManager.stage.on('mousemove', (event) => {
+            const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
-
-            const platformX = Math.floor((pos.x - gridManager.stage.x()) / gridManager.totalSize) - this.offsetX;
+    
+            // Преобразуем координаты мыши в координаты сетки
+            const platformX = Math.floor(pos.x / this.gridManager.totalSize) - this.offsetX;
             this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width));
         });
-
-        gridManager.stage.on('click', (event) => {
-            const pos = gridManager.stage.getPointerPosition();
+    
+        this.gridManager.stage.on('click', (event) => {
+            const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
-
-            const x = Math.floor((pos.x - gridManager.stage.x()) / gridManager.totalSize);
-            const y = Math.floor((pos.y - gridManager.stage.y()) / gridManager.totalSize);
-
+    
+            const x = Math.floor(pos.x / this.gridManager.totalSize);
+            const y = Math.floor(pos.y / this.gridManager.totalSize);
+    
             if (event.evt.button === 0) {
                 this.handleLeftClick(x, y);
             } else if (event.evt.button === 2) {
