@@ -66,24 +66,24 @@ export class Controls {
             this.isRunning = false;
         });
 
-        backToMenuButton.addEventListener('click', () => this.backToMainMenu());
-    }
-
-    backToMainMenu() {
-        if (this.currentModule) {
-            this.currentModule.pause(); // Останавливаем игру
-            this.currentModule.clear(); // Очищаем игровое поле
-            this.currentModule.gridManager.selectedTiles = {};
-            this.currentModule.gridManager.updateVisibleTiles();
-        }
-
-        // Скрываем кнопки управления и показываем главное меню
-        document.getElementById('game-controls').style.display = 'none';
-        document.getElementById('start-menu').style.display = 'block';
-
-        // Сбрасываем текущий модуль
-        this.currentModule = null;
-        this.isRunning = false;
+        backToMenuButton.addEventListener('click', () => {
+            if (this.currentModule) {
+                this.currentModule.pause(); // Останавливаем игру
+                this.currentModule.clear(); // Очищаем игровое поле
+                startStopButton.textContent = 'Старт';
+                this.isRunning = false;
+                this.currentModule.gridManager.selectedTiles = {};
+                this.currentModule.gridManager.updateVisibleTiles();
+            }
+    
+            // Скрываем кнопки управления и показываем главное меню
+            document.getElementById('game-controls').style.display = 'none';
+            document.getElementById('start-menu').style.display = 'block';
+    
+            // Сбрасываем текущий модуль
+            this.currentModule = null;
+            this.isRunning = false;
+        });
     }
 
     getGameIcon(name) {

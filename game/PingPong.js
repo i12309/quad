@@ -43,8 +43,7 @@ export class PingPong extends BaseModule {
         this.pause();
         this.score = 0;
         this.gridManager.selectedTiles = {};
-        this.calculateFieldDimensions(); // Рассчитываем размеры поля
-        this.drawFieldBorder(); // Рисуем границы поля
+        this.drawBorder(); // Рассчитываем размеры поля и Рисуем границы поля
         this.bindMouseEvents(); // Привязываем события мыши
         this.gridManager.updateVisibleTiles();
     }
@@ -90,16 +89,16 @@ export class PingPong extends BaseModule {
         this.gridManager.updateVisibleTiles();
     }
 
-    calculateFieldDimensions() {
+    drawBorder() {
+        // Вычисляем размеры поля и его координаты
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
         this.fieldWidth = Math.floor(visibleWidth / 3);
         this.fieldHeight = Math.floor(visibleHeight * 0.9);
         this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
         this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
-    }
-
-    drawFieldBorder() {
+        
+        // рисуем игровое поле 
         for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
             for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
                 const key = `${x},${y}`;
@@ -121,24 +120,10 @@ export class PingPong extends BaseModule {
             const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
             this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width));
         });
-
-        this.gridManager.stage.on('click', (event) => {
-            const pos = this.gridManager.stage.getPointerPosition();
-            if (!pos) return;
-
-            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
-            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize);
-
-            if (event.evt.button === 0) {
-                this.handleLeftClick(x, y);
-            } else if (event.evt.button === 2) {
-                this.handleRightClick(x, y);
-            }
-        });
     }
 
     showContextMenu(x, y) {
-
+        // 
     }
 
     toggleCell(x, y) {
