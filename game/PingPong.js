@@ -12,8 +12,8 @@ export class PingPong extends BaseModule {
         this.interval = null;
         this.speed = 100; // Скорость обновления (мс)
         this.score = 0; // Счёт
-        this.fieldWidth = 60; // Ширина поля
-        this.fieldHeight = 80; // Высота поля
+        this.fieldWidth = 150; // Ширина поля
+        this.fieldHeight = 100; // Высота поля
         this.offsetX = Math.floor((this.gridManager.stage.width() / this.gridManager.totalSize - this.fieldWidth) / 2); // Смещение по X
         this.offsetY = Math.floor((this.gridManager.stage.height() / this.gridManager.totalSize - this.fieldHeight) / 2); // Смещение по Y
     }
@@ -53,8 +53,8 @@ export class PingPong extends BaseModule {
 
     drawFieldBorder() {
         // Очищаем предыдущие границы
-        for (let x = 0; x < this.gridManager.stage.width()+1 / this.gridManager.totalSize; x++) {
-            for (let y = 0; y < this.gridManager.stage.height()+1 / this.gridManager.totalSize; y++) {
+        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
+            for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
                 const key = `${x},${y}`;
                 if (this.gridManager.selectedTiles[key] && this.gridManager.selectedTiles[key].type === '#CCCCCC') {
                     delete this.gridManager.selectedTiles[key];
@@ -62,14 +62,14 @@ export class PingPong extends BaseModule {
             }
         }
 
-        // Рисуем новые границы
-        for (let x = this.offsetX; x < this.offsetX + this.fieldWidth; x++) {
-            this.gridManager.selectedTiles[`${x},${this.offsetY}`] = { type: '#CCCCCC' }; // Верхняя граница
-            this.gridManager.selectedTiles[`${x},${this.offsetY + this.fieldHeight - 1}`] = { type: '#CCCCCC' }; // Нижняя граница
+        // Рисуем новые границы (на один квадратик дальше за пределами поля)
+        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
+            this.gridManager.selectedTiles[`${x},${this.offsetY - 1}`] = { type: '#CCCCCC' }; // Верхняя граница
+            this.gridManager.selectedTiles[`${x},${this.offsetY + this.fieldHeight}`] = { type: '#CCCCCC' }; // Нижняя граница
         }
-        for (let y = this.offsetY; y < this.offsetY + this.fieldHeight; y++) {
-            this.gridManager.selectedTiles[`${this.offsetX},${y}`] = { type: '#CCCCCC' }; // Левая граница
-            this.gridManager.selectedTiles[`${this.offsetX + this.fieldWidth - 1},${y}`] = { type: '#CCCCCC' }; // Правая граница
+        for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
+            this.gridManager.selectedTiles[`${this.offsetX - 1},${y}`] = { type: '#CCCCCC' }; // Левая граница
+            this.gridManager.selectedTiles[`${this.offsetX + this.fieldWidth},${y}`] = { type: '#CCCCCC' }; // Правая граница
         }
         this.gridManager.updateVisibleTiles();
     }
@@ -120,12 +120,12 @@ export class PingPong extends BaseModule {
 
         // Очищаем старую позицию платформы
         for (let i = 0; i < this.platform.width; i++) {
-            delete this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`];
+            delete this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`];
         }
 
         // Рисуем платформу
         for (let i = 0; i < this.platform.width; i++) {
-            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`] = { type: '#0000FF' }; // Синий цвет
+            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`] = { type: '#0000FF' }; // Синий цвет
         }
 
         this.gridManager.updateVisibleTiles();
