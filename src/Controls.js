@@ -81,6 +81,8 @@ export class Controls {
         if (this.currentModule) {
             this.currentModule.pause(); // Останавливаем игру
             this.currentModule.clear(); // Очищаем игровое поле
+            this.currentModule.gridManager.selectedTiles = {};
+            this.currentModule.gridManager.updateVisibleTiles();
         }
 
         // Скрываем кнопки управления и показываем главное меню
