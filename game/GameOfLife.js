@@ -44,6 +44,7 @@ export class GameOfLife extends BaseModule {
         return count;
     }
 
+    /*
     updateGame() {
         const newSelectedTiles = {};
         const cellsToCheck = new Set();
@@ -78,6 +79,27 @@ export class GameOfLife extends BaseModule {
 
         Object.keys(this.gridManager.selectedTiles).forEach((key) => delete this.gridManager.selectedTiles[key]);
         Object.assign(this.gridManager.selectedTiles, newSelectedTiles);
+        this.gridManager.updateVisibleTiles();
+    }
+        */
+
+    updateGame() {
+        const newSelectedTiles = {};
+        const cellsToCheck = new Set(Object.keys(this.gridManager.selectedTiles));
+        for (const key of cellsToCheck) {
+            const [x, y] = key.split(',').map(Number);
+            const neighbors = this.countNeighbors(x, y);
+            if (this.gridManager.selectedTiles[key]) {
+                if (neighbors === 2 || neighbors === 3) {
+                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
+                }
+            } else {
+                if (neighbors === 3) {
+                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' }; // Серый цвет
+                }
+            }
+        }
+        this.gridManager.selectedTiles = newSelectedTiles;
         this.gridManager.updateVisibleTiles();
     }
 

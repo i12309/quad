@@ -101,13 +101,30 @@ export class PhysicsSimulation extends BaseModule {
         }, { once: true });
     }
 
-    handleLeftClick(x, y) {
+    /*handleLeftClick(x, y) {
         const cellKey = `${x},${y}`;
         if (this.gridManager.selectedTiles[cellKey]) {
             this.colorIndex = (this.colorIndex + 1) % this.colors.length;
             this.gridManager.selectedTiles[cellKey].type = this.colors[this.colorIndex];
         } else {
             this.gridManager.selectedTiles[cellKey] = { type: this.colors[this.colorIndex] };
+        }
+        this.gridManager.updateVisibleTiles();
+    }*/
+
+    handleLeftClick(x, y) {
+        const cellKey = `${x},${y}`;
+        if (!this.gridManager.selectedTiles[cellKey]) {
+            this.gridManager.selectedTiles[cellKey] = { type: 'fall', color: '#CCCCCC' }; // Новый тип и цвет
+        } else {
+            const currentType = this.gridManager.selectedTiles[cellKey].type;
+            if (currentType === 'fall') {
+                this.gridManager.selectedTiles[cellKey].type = 'stand'; // Меняем тип
+                this.gridManager.selectedTiles[cellKey].color = '#00FF00'; // Зелёный цвет
+            } else if (currentType === 'stand') {
+                this.gridManager.selectedTiles[cellKey].type = 'fall'; // Меняем обратно
+                this.gridManager.selectedTiles[cellKey].color = '#CCCCCC'; // Серый цвет
+            }
         }
         this.gridManager.updateVisibleTiles();
     }
