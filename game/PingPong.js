@@ -7,15 +7,29 @@ export class PingPong extends BaseModule {
         this.name = 'PingPong';
         this.gridManager = gridManager;
         this.isRunning = false;
-        this.ball = { x: 75, y: 50, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
-        this.platform = { x: 140, width: 6 }; // Платформа (положение и ширина)
+        this.ball = { x: 0, y: 0, dx: 1, dy: -1 }; // Начальная позиция и направление мяча
+        this.platform = { x: 0, width: 6 }; // Платформа (положение и ширина)
         this.interval = null;
         this.speed = 100; // Скорость обновления (мс)
         this.score = 0; // Счёт
-        this.fieldWidth = 150; // Ширина поля
-        this.fieldHeight = 100; // Высота поля
-        this.offsetX = Math.floor((this.gridManager.stage.width() / this.gridManager.totalSize - this.fieldWidth) / 2); // Смещение по X
-        this.offsetY = Math.floor((this.gridManager.stage.height() / this.gridManager.totalSize - this.fieldHeight) / 2); // Смещение по Y
+        this.fieldWidth = 0; // Ширина поля (будет рассчитана динамически)
+        this.fieldHeight = 0; // Высота поля (будет рассчитана динамически)
+        this.offsetX = 0; // Смещение по X
+        this.offsetY = 0; // Смещение по Y
+        this.calculateFieldDimensions(); // Рассчитываем размеры поля при инициализации
+    }
+
+    calculateFieldDimensions() {
+        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+
+        // Поле занимает одну треть ширины и 90% высоты экрана
+        this.fieldWidth = Math.floor(visibleWidth / 3);
+        this.fieldHeight = Math.floor(visibleHeight * 0.9);
+
+        // Центрируем поле
+        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
     }
 
     start() {
