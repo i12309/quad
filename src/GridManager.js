@@ -53,10 +53,11 @@ export class GridManager {
             for (let y = startY; y < startY + visibleHeight; y++) {
                 const cellKey = `${x},${y}`;
                 // Создаем тайл только если он есть в selectedTiles
-                c++;
+                
                 if (this.selectedTiles[cellKey]) {
                     const tile = this.createTile(x, y);
                     this.layer.add(tile);
+                    c++;
                 }
                 //const tile = this.createTile(x, y);
                 //this.layer.add(tile);
