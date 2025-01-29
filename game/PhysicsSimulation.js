@@ -9,7 +9,8 @@ export class PhysicsSimulation extends BaseModule {
         this.isRunning = false;
         this.interval = null;
 
-        this.colors = ['#CCCCCC', '#00FF00', '#0000FF']; // Серый, Зеленый, Синий
+        this.colors = ['#CCCCCC', '#00FF00']; // Серый, Зеленый
+        this.type = ['stand', 'fall']; // стоит, падает
         this.colorIndex = 0;
     }
 
@@ -40,21 +41,21 @@ export class PhysicsSimulation extends BaseModule {
             const [x, y] = key.split(',').map(Number);
             const cellType = this.gridManager.selectedTiles[key].type;
 
-            if (cellType === 'gray') {
+            if (cellType === 'fall') {
                 // Клетка серого цвета — падает вниз
                 const newY = y + 1;
                 const newKey = `${x},${newY}`;
 
                 // Проверяем, можно ли переместить клетку вниз
                 if (!this.gridManager.selectedTiles[newKey]) {
-                    newSelectedTiles[newKey] = { type: 'gray' };
+                    newSelectedTiles[newKey] = { type: 'fall', color: '#CCCCCC' };
                 } else {
                     // Если клетка внизу занята, оставляем на месте
-                    newSelectedTiles[key] = { type: 'gray' };
+                    newSelectedTiles[key] = { type: 'fall', color: '#CCCCCC' };
                 }
-            } else if (cellType === 'yellow') {
+            } else if (cellType === 'stand') {
                 // Клетка желтого цвета — остается на месте
-                newSelectedTiles[key] = { type: 'yellow' };
+                newSelectedTiles[key] = { type: 'stand', color: '#00FF00' };
             }
         }
 
@@ -68,63 +69,14 @@ export class PhysicsSimulation extends BaseModule {
 
 // ==========================================================================
 
-    showContextMenu(x, y) {
-        const contextMenu = document.createElement('div');
-        contextMenu.style.position = 'absolute';
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        contextMenu.style.backgroundColor = 'white';
-        contextMenu.style.border = '1px solid black';
-        contextMenu.style.padding = '10px';
-        contextMenu.style.zIndex = '1000';
-
-        const colors = ['Серый', 'Зеленый', 'Синий'];
-        colors.forEach((color, index) => {
-            const item = document.createElement('div');
-            item.textContent = color;
-            item.style.cursor = 'pointer';
-            item.addEventListener('click', () => {
-                this.gridManager.selectedTiles[`${x},${y}`] = { type: this.colors[index] };
-                this.gridManager.updateVisibleTiles();
-                contextMenu.remove();
-            });
-            contextMenu.appendChild(item);
-        });
-
-        document.body.appendChild(contextMenu);
-
-        // Удаляем меню при клике вне его
-        document.addEventListener('click', (event) => {
-            if (!contextMenu.contains(event.target)) {
-                contextMenu.remove();
-            }
-        }, { once: true });
-    }
-
-    /*handleLeftClick(x, y) {
+    handleLeftClick(x, y) {
         const cellKey = `${x},${y}`;
         if (this.gridManager.selectedTiles[cellKey]) {
             this.colorIndex = (this.colorIndex + 1) % this.colors.length;
-            this.gridManager.selectedTiles[cellKey].type = this.colors[this.colorIndex];
+            this.gridManager.selectedTiles[cellKey].type = this.type[this.colorIndex];
+            this.gridManager.selectedTiles[cellKey].color = this.color[this.colorIndex];
         } else {
-            this.gridManager.selectedTiles[cellKey] = { type: this.colors[this.colorIndex] };
-        }
-        this.gridManager.updateVisibleTiles();
-    }*/
-
-    handleLeftClick(x, y) {
-        const cellKey = `${x},${y}`;
-        if (!this.gridManager.selectedTiles[cellKey]) {
-            this.gridManager.selectedTiles[cellKey] = { type: 'fall', color: '#CCCCCC' }; // Новый тип и цвет
-        } else {
-            const currentType = this.gridManager.selectedTiles[cellKey].type;
-            if (currentType === 'fall') {
-                this.gridManager.selectedTiles[cellKey].type = 'stand'; // Меняем тип
-                this.gridManager.selectedTiles[cellKey].color = '#00FF00'; // Зелёный цвет
-            } else if (currentType === 'stand') {
-                this.gridManager.selectedTiles[cellKey].type = 'fall'; // Меняем обратно
-                this.gridManager.selectedTiles[cellKey].color = '#CCCCCC'; // Серый цвет
-            }
+            this.gridManager.selectedTiles[cellKey] = { type: this.type[this.colorIndex], color: this.color[this.colorIndex] };
         }
         this.gridManager.updateVisibleTiles();
     }
