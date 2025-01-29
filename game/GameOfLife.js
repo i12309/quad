@@ -153,20 +153,6 @@ export class GameOfLife extends BaseModule {
             this.isDragging = false;
         });
 
-        // Масштабирование колесом мыши
-        this.gridManager.stage.container().addEventListener('wheel', (event) => {
-            event.preventDefault();
-            const pointerPos = this.gridManager.stage.getPointerPosition();
-            if (!pointerPos) return;
-            const oldTileSize = this.gridManager.tileSize;
-            const newTileSize = event.deltaY < 0 ? oldTileSize + 1 : oldTileSize - 1;
-            this.gridManager.tileSize = Math.max(this.gridManager.minTileSize, Math.min(this.gridManager.maxTileSize, newTileSize));
-            this.gridManager.updateVisibleTiles(this.gridManager.tileSize);
-            const scaleFactor = this.gridManager.tileSize / oldTileSize;
-            this.gridManager.stage.x((pointerPos.x - this.gridManager.stage.x()) * (1 - scaleFactor) + this.gridManager.stage.x());
-            this.gridManager.stage.y((pointerPos.y - this.gridManager.stage.y()) * (1 - scaleFactor) + this.gridManager.stage.y());
-        });
-
         // Изменение размера окна
         window.addEventListener('resize', () => {
             this.gridManager.stage.width(window.innerWidth);
