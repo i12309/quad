@@ -163,32 +163,3 @@ export class PingPong extends BaseModule {
         this.gridManager.updateVisibleTiles();
     }
 }
-
-    showContextMenu(x, y) {
-        const contextMenu = document.createElement('div');
-        contextMenu.style.position = 'absolute';
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        contextMenu.style.backgroundColor = 'white';
-        contextMenu.style.border = '1px solid black';
-        contextMenu.style.padding = '10px';
-        contextMenu.style.zIndex = '1000';
-
-        const restartButton = document.createElement('button');
-        restartButton.textContent = 'Начать заново';
-        restartButton.addEventListener('click', () => {
-            this.clear();
-            this.start();
-            contextMenu.remove();
-        });
-
-        contextMenu.appendChild(restartButton);
-        document.body.appendChild(contextMenu);
-
-        document.addEventListener('click', (event) => {
-            if (!contextMenu.contains(event.target)) {
-                contextMenu.remove();
-            }
-        }, { once: true });
-    }
-}
