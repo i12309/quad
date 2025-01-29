@@ -59,6 +59,7 @@
             const GameOfLife = module.GameOfLife;
             const gameOfLife = new GameOfLife(gridManager);
             controls.registerModule(gameOfLife);
+            controls.currentModule = gameOfLife;
         })
         .catch((error) => {
             console.log('Модуль gameOfLife не найден. Продолжаем без него.');
@@ -69,6 +70,7 @@
             const PingPong = module.PingPong;
             const pingPong = new PingPong(gridManager);
             controls.registerModule(pingPong);
+            controls.currentModule = pingPong;
         })
         .catch((error) => {
             console.log('Модуль PingPong не найден. Продолжаем без него.');
