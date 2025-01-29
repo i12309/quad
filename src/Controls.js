@@ -70,11 +70,10 @@ export class Controls {
             if (this.currentModule) {
                 this.currentModule.pause(); // Останавливаем игру
                 this.currentModule.clear(); // Очищаем игровое поле
-                startStopButton.textContent = 'Старт';
-                this.isRunning = false;
                 this.currentModule.gridManager.selectedTiles = {};
                 this.currentModule.gridManager.updateVisibleTiles();
             }
+            startStopButton.textContent = 'Старт';
     
             // Скрываем кнопки управления и показываем главное меню
             document.getElementById('game-controls').style.display = 'none';
