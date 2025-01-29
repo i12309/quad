@@ -20,6 +20,8 @@ export class PingPong extends BaseModule {
 
     setup() {
         this.clear(); // Инициализируем игру
+        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
+        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
     }
 
     start() {
@@ -79,13 +81,12 @@ export class PingPong extends BaseModule {
             const oldPlatformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
             //console.log(this.gridManager.selectedTiles[oldPlatformKey]);
             delete this.gridManager.selectedTiles[oldPlatformKey];
-            this.gridManager.updateVisibleTiles();
             //console.log(this.gridManager.selectedTiles[oldPlatformKey]);
         }
 
         for (let i = 0; i < this.platform.width; i++) {
             const platformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
-            this.gridManager.selectedTiles[platformKey] = { type: 'platform', color: '#0000FF' };
+            //this.gridManager.selectedTiles[platformKey] = { type: 'platform', color: '#0000FF' };
         }
 
         this.gridManager.updateVisibleTiles();
