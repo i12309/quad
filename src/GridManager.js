@@ -70,7 +70,7 @@ export class GridManager {
     
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey]) {
-            tile.fill(this.selectedTiles[cellKey].color || this.backgroundColor);
+            tile.fill(this.selectedTiles[cellKey].color);
         }
         return tile;
     }
