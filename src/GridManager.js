@@ -17,25 +17,8 @@ export class GridManager {
         this.selectedTiles = {};
         this.tilePool = [];
         this.updateScheduled = false;
-
-        this.bindMouseEvents();
+        
         this.updateVisibleTiles();
-    }
-
-    bindMouseEvents() {
-        this.stage.on('click', (event) => {
-            const pos = this.stage.getPointerPosition();
-            if (!pos) return;
-
-            const x = Math.floor((pos.x - this.stage.x()) / this.totalSize);
-            const y = Math.floor((pos.y - this.stage.y()) / this.totalSize);
-
-            if (event.evt.button === 0) {
-                this.controls.currentModule?.handleLeftClick(x, y);
-            } else if (event.evt.button === 2) {
-                this.controls.currentModule?.handleRightClick(x, y);
-            }
-        });
     }
 
     createTile(x, y) {
