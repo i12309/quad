@@ -76,7 +76,7 @@ select {
 
 /* Файл: styles.css */
 #back-to-menu-btn {
-    background-color: #ff4d4d; /* Красный цвет для акцента */
+    background-color: #7c7c7c; /* Красный цвет для акцента */
     color: white;
     border: none;
     padding: 10px 20px;
@@ -86,5 +86,5 @@ select {
 }
 
 #back-to-menu-btn:hover {
-    background-color: #cc0000;
+    background-color: #c5c5c5;
 }
