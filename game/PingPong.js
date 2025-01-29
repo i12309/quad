@@ -42,6 +42,8 @@ export class PingPong extends BaseModule {
         this.pause();
         this.score = 0;
         this.gridManager.selectedTiles = {};
+        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
+        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
         this.drawBorder(); // Рассчитываем размеры поля и Рисуем границы поля
         this.bindMouseEvents(); // Привязываем события мыши
         this.gridManager.updateVisibleTiles();
