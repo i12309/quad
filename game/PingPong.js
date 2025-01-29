@@ -58,7 +58,7 @@ export class PingPong extends BaseModule {
 
     resetGame() {
         this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
-        this.platform = { x: this.fieldWidth - 10 - this.platform.width, width: 6 }; // Платформа справа
+        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 }; // Платформа по центру
         this.score = 0;
         this.gridManager.selectedTiles = {};
         this.gridManager.updateVisibleTiles();
@@ -115,7 +115,7 @@ export class PingPong extends BaseModule {
         }
 
         // Проверяем столкновение с платформой
-        if (this.ball.y === this.fieldHeight - 2) {
+        if (this.ball.y === this.fieldHeight - 6) { // Платформа теперь на 4 клетки выше
             if (this.ball.x >= this.platform.x && this.ball.x < this.platform.x + this.platform.width) {
                 this.ball.dy *= -1; // Отскок от платформы
                 this.score++;
@@ -134,12 +134,12 @@ export class PingPong extends BaseModule {
 
         // Очищаем старую позицию платформы
         for (let i = 0; i < this.platform.width; i++) {
-            delete this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`];
+            delete this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`]; // На 4 клетки выше
         }
 
         // Рисуем платформу
         for (let i = 0; i < this.platform.width; i++) {
-            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 1}`] = { type: '#0000FF' }; // Синий цвет
+            this.gridManager.selectedTiles[`${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`] = { type: '#0000FF' }; // Синий цвет
         }
 
         this.gridManager.updateVisibleTiles();
