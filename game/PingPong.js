@@ -162,6 +162,7 @@ export class PingPong extends BaseModule {
 
     setup() {
         this.calculateFieldDimensions(); // Рассчитываем размеры поля
+        this.drawFieldBorder(); // Рисуем границы поля
         this.bindMouseEvents(); // Привязываем события мыши
         this.resetGame(); // Инициализируем игру
     }
