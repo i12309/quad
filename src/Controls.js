@@ -49,6 +49,7 @@ export class Controls {
         const backToMenuButton = document.getElementById('back-to-menu-btn');
 
         startStopButton.addEventListener('click', () => {
+            alert('1');
             if (this.isRunning) {
                 this.currentModule.pause();
                 startStopButton.textContent = 'Старт';
