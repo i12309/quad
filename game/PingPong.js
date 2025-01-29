@@ -24,6 +24,9 @@ export class PingPong extends BaseModule {
 
     start() {
         if (!this.isRunning) {
+            this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
+            this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
+            console.log(this.ball);console.log(this.platform);
             this.isRunning = true;
             this.interval = setInterval(() => this.update(), this.speed);
         }
@@ -38,9 +41,6 @@ export class PingPong extends BaseModule {
 
     clear() {
         this.pause();
-        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
-        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
-        console.log(this.ball);console.log(this.platform);
         this.score = 0;
         this.gridManager.selectedTiles = {};
         this.calculateFieldDimensions(); // Рассчитываем размеры поля
