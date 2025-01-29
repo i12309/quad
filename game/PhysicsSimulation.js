@@ -59,6 +59,10 @@ export class PhysicsSimulation extends BaseModule {
             }
         }
 
+        setTimeout(() => {
+            console.log(this.gridManager.selectedTiles);
+          }, 5000);
+
         // Обновляем состояние клеток
         Object.keys(this.gridManager.selectedTiles).forEach((key) => delete this.gridManager.selectedTiles[key]);
         Object.assign(this.gridManager.selectedTiles, newSelectedTiles);
