@@ -6,6 +6,7 @@ export class Controls {
         this.currentModule = null; // Текущий выбранный модуль
         this.isRunning = false; // Флаг, указывающий, запущена ли симуляция
         this.setupStartMenu();
+        this.SetButtons();
     }
 
     registerModule(module) {
@@ -42,7 +43,9 @@ export class Controls {
         // Скрываем стартовое меню и показываем кнопки управления
         document.getElementById('start-menu').style.display = 'none';
         document.getElementById('game-controls').style.display = 'block';
+    }
 
+    SetButtons() {
         // Настройка кнопок управления
         const startStopButton = document.getElementById('start-stop-btn');
         const clearButton = document.getElementById('clear-btn');
