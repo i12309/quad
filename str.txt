@@ -6,8 +6,8 @@ project/
 │   └── StageManager.js
 ├── game/
 │   ├── BaseModule.js
-│   ├── GameOfLife.js
-│   └── PhysicsSimulation.js
+│   └── GameOfLife.js
+│   └── PingPong.js
 │
 └── index.html
 
