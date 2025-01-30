@@ -16,12 +16,97 @@ export class SlidingPuzzle extends BaseModule {
         this.offsetY = 0;
     }
 
-    setup() {
-        this.clear();
+    // Реализация всех обязательных методов из BaseModule
+
+    start() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            this.log('Игра началась!');
+        }
+    }
+
+    pause() {
+        if (this.isRunning) {
+            this.isRunning = false;
+            this.log('Игра на паузе.');
+        }
+    }
+
+    clear() {
+        this.pause();
+        this.board = [];
+        this.gridManager.selectedTiles = {};
         this.initBoard();
         this.shuffleBoard();
         this.drawBorder();
+        this.log('Игра очищена и готова к новому раунду.');
     }
+
+    update() {
+        // В пятнашках нет непрерывного обновления, как в других играх
+        this.log('Обновление состояния игры.');
+    }
+
+    toggleCell(x, y) {
+        this.moveTile(x, y);
+        this.drawBorder();
+        if (this.checkWin()) {
+            alert('Победа!');
+            this.clear();
+        }
+    }
+
+    handleLeftClick(x, y) {
+        this.toggleCell(x, y);
+        this.log(`Левый клик на клетке (${x}, ${y}).`);
+    }
+
+    handleRightClick(x, y) {
+        // В пятнашках правый клик не используется
+        this.log(`Правый клик на клетке (${x}, ${y}).`);
+    }
+
+    bindMouseEvents() {
+        this.gridManager.stage.off(); // Убираем старые обработчики
+        this.gridManager.stage.on('click', (event) => {
+            const pos = this.gridManager.stage.getPointerPosition();
+            if (!pos) return;
+
+            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
+            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
+
+            if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
+                this.handleLeftClick(x, y);
+            }
+        });
+
+        this.gridManager.stage.on('contextmenu', (event) => {
+            event.evt.preventDefault(); // Отключаем стандартное меню
+            const pos = this.gridManager.stage.getPointerPosition();
+            if (!pos) return;
+
+            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
+            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
+
+            if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
+                this.handleRightClick(x, y);
+            }
+        });
+
+        this.log('События мыши привязаны.');
+    }
+
+    showContextMenu(x, y) {
+        this.log(`Контекстное меню показано на клетке (${x}, ${y}).`);
+    }
+
+    setup() {
+        this.clear();
+        this.bindMouseEvents();
+        this.log('Игра настроена и готова к запуску.');
+    }
+
+    // Вспомогательные методы
 
     initBoard() {
         this.board = Array(this.fieldHeight)
@@ -85,15 +170,6 @@ export class SlidingPuzzle extends BaseModule {
             }
         }
         this.gridManager.updateVisibleTiles();
-    }
-
-    handleLeftClick(x, y) {
-        this.moveTile(x, y);
-        this.drawBorder();
-        if (this.checkWin()) {
-            alert('Победа!');
-            this.clear();
-        }
     }
 
     checkWin() {
