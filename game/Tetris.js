@@ -31,8 +31,9 @@ export class Tetris extends BaseModule {
         this.isRunning = false;
         this.interval = null;
         this.score = 0;
-        this.fieldWidth = 10;
-        this.fieldHeight = 20;
+        this.fieldWidth = 30; // было 10
+        this.fieldHeight = 60; // было 20
+        this.tileScale = 3; // Множитель размера клетки
         this.offsetX = 0;
         this.offsetY = 0;
         this.nextPiece = null;
@@ -48,6 +49,14 @@ export class Tetris extends BaseModule {
     }
 
     setup() {
+        // Настраиваем размеры в GridManager перед инициализацией
+        this.gridManager.tileSize = 10 * this.tileScale;
+        this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
+
+        // Центрируем камеру на середине поля
+        this.gridManager.stage.x(-this.offsetX * this.gridManager.totalSize);
+        this.gridManager.stage.y(-this.offsetY * this.gridManager.totalSize);
+
         this.clear();
         this.generateNewPiece();
         this.drawBorder();
@@ -97,25 +106,32 @@ export class Tetris extends BaseModule {
     }
 
     drawBorder() {
+        // Адаптируем расчет смещений с учетом масштаба
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+        
         this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2) - 2;
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight * 0.8) / 2); // Добавляем вертикальный отступ
 
-        // Рисуем границы игрового поля
-        for (let y = 0; y < this.fieldHeight; y++) {
+        // Рисуем только видимую часть поля
+        const startY = Math.max(0, Math.floor(-this.gridManager.stage.y() / this.gridManager.totalSize));
+        const endY = Math.min(this.fieldHeight, startY + Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize));
+
+        for (let y = startY; y < endY; y++) {
             for (let x = 0; x < this.fieldWidth; x++) {
                 const key = `${this.offsetX + x},${this.offsetY + y}`;
                 this.gridManager.selectedTiles[key] = { 
                     type: 'cell', 
-                    color: this.board[y][x] || '#1A1A1A' 
+                    color: this.board[y][x] || '#1A1A1A',
+                    width: this.tileScale,
+                    height: this.tileScale
                 };
             }
         }
     }
 
     drawNextPiece() {
-        const previewOffsetX = this.offsetX + this.fieldWidth + 2;
+        const previewOffsetX = this.offsetX + this.fieldWidth + 2 * this.tileScale;
         const previewOffsetY = this.offsetY;
 
         // Очищаем область превью
@@ -141,7 +157,7 @@ export class Tetris extends BaseModule {
     }
 
     drawScore() {
-        const scoreX = this.offsetX + this.fieldWidth + 2;
+        const scoreX = this.offsetX + this.fieldWidth + 2 * this.tileScale;
         const scoreY = this.offsetY + 6;
         const key = `${scoreX},${scoreY}`;
         this.gridManager.selectedTiles[key] = {
