@@ -33,6 +33,14 @@ export class Minesweeper extends BaseModule {
         this.clear(); // Используем clear для инициализации
     }
 
+    pause() {
+        this.clear(); // Используем clear для инициализации
+    }
+
+    start() {
+        this.clear(); // Используем clear для инициализации
+    }
+
     initBoard() {
         this.board = Array(this.fieldHeight)
             .fill()
