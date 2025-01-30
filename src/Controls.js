@@ -85,6 +85,7 @@ export class Controls {
             // Сбрасываем текущий модуль
             this.currentModule = null;
             this.isRunning = false;
+            this.gridManager.setup();
         });
     }
 }
