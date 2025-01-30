@@ -17,12 +17,20 @@ export class Minesweeper extends BaseModule {
         this.offsetY = 0;
     }
 
+    clear() {
+        this.pause(); // Останавливаем игру, если она запущена
+        this.score = 0; // Сбрасываем счет
+        this.board = []; // Очищаем игровое поле
+        this.gridManager.selectedTiles = {}; // Очищаем отрисованные клетки
+        this.initBoard(); // Инициализируем новое поле
+        this.placeMines(); // Расставляем мины
+        this.calculateNumbers(); // Вычисляем числа вокруг мин
+        this.drawBorder(); // Отрисовываем границы и поле
+        this.gridManager.updateVisibleTiles(); // Обновляем отображение
+    }
+
     setup() {
-        this.clear();
-        this.initBoard();
-        this.placeMines();
-        this.calculateNumbers();
-        this.drawBorder();
+        this.clear(); // Используем clear для инициализации
     }
 
     initBoard() {
