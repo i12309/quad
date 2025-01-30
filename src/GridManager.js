@@ -34,7 +34,7 @@ export class GridManager {
                 fill: '#ccc', // Цвет текста
                 align: 'center', // Выравнивание текста (если есть width)
                 width: 200, // Ширина области текста (опционально)
-                padding: 0, // Внутренний отступ (опционально)
+                padding: 10, // Внутренний отступ (опционально)
                 fontStyle: 'bold', // Стиль шрифта (normal, bold, italic)
             });
         }
