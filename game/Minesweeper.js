@@ -151,32 +151,28 @@ export class Minesweeper extends BaseModule {
     // Вспомогательные методы
 
     initBoard() {
-        console.log(this.board);
+        // Инициализируем массив, где каждая клетка — объект с type: 'hidden' и value: 0
         this.board = Array(this.fieldHeight)
             .fill()
-            .map(() => Array(this.fieldWidth).fill({ type: 'hidden', value: 'hidden' }));
-        console.log(this.board);
-        
+            .map(() => Array(this.fieldWidth).fill().map(() => ({ type: 'hidden', value: 0 })));
     }
 
     placeMines() {
-        
         let minesPlaced = 0;
         while (minesPlaced < this.minesCount) {
             const x = Math.floor(Math.random() * this.fieldWidth);
             const y = Math.floor(Math.random() * this.fieldHeight);
             if (this.board[y][x].value !== 'mine') {
-                this.board[y][x].value = 'mine';
+                this.board[y][x].value = 'mine'; // Устанавливаем мину
                 minesPlaced++;
             }
         }
-        console.log(this.board);
     }
 
     calculateNumbers() {
         for (let y = 0; y < this.fieldHeight; y++) {
             for (let x = 0; x < this.fieldWidth; x++) {
-                if (this.board[y][x].value === 'mine') continue;
+                if (this.board[y][x].value === 'mine') continue; // Пропускаем мины
                 let count = 0;
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
@@ -187,7 +183,7 @@ export class Minesweeper extends BaseModule {
                         }
                     }
                 }
-                this.board[y][x].value = count;
+                this.board[y][x].value = count; // Устанавливаем количество мин вокруг
             }
         }
     }
