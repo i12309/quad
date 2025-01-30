@@ -17,22 +17,104 @@ export class TicTacToe extends BaseModule {
         this.offsetY = 0;
     }
 
-    setup() {
-        this.clear(); // Очищаем поле
-        this.drawBorder(); // Рисуем границы
+    // Реализация всех обязательных методов из BaseModule
+
+    start() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            this.log('Игра началась!');
+        }
     }
 
-    // Файл: ./game/TicTacToe.js
-    start() {
-        this.setup(); // Инициализируем игру
+    pause() {
+        if (this.isRunning) {
+            this.isRunning = false;
+            this.log('Игра на паузе.');
+        }
     }
 
     clear() {
-        this.board = Array(3).fill().map(() => Array(3).fill(null)); // Сброс игрового поля
-        this.currentPlayer = 'X'; // Сброс текущего игрока
-        this.gridManager.selectedTiles = {}; // Очистка выбранных клеток
-        this.gridManager.updateVisibleTiles(); // Обновление видимых клеток
+        this.pause();
+        this.board = Array(3).fill().map(() => Array(3).fill(null)); // Очищаем поле
+        this.currentPlayer = 'X'; // Сбрасываем текущего игрока
+        this.gridManager.selectedTiles = {}; // Очищаем отрисованные клетки
+        this.drawBorder(); // Отрисовываем пустое поле
+        this.gridManager.updateVisibleTiles(); // Обновляем отображение
+        this.log('Игра очищена и готова к новому раунду.');
     }
+
+    update() {
+        // В крестиках-ноликах нет непрерывного обновления, как в других играх
+        this.log('Обновление состояния игры.');
+    }
+
+    toggleCell(x, y) {
+        if (this.board[y][x] === null) {
+            this.board[y][x] = this.currentPlayer;
+            this.drawBorder();
+            if (this.checkWin(this.currentPlayer)) {
+                alert(`Победил ${this.currentPlayer}!`);
+                this.clear();
+            } else if (this.board.flat().every(cell => cell !== null)) {
+                alert('Ничья!');
+                this.clear();
+            } else {
+                this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+            }
+        }
+    }
+
+    handleLeftClick(x, y) {
+        this.toggleCell(x, y);
+        this.log(`Левый клик на клетке (${x}, ${y}).`);
+    }
+
+    handleRightClick(x, y) {
+        // В крестиках-ноликах правый клик не используется
+        this.log(`Правый клик на клетке (${x}, ${y}).`);
+    }
+
+    bindMouseEvents() {
+        this.gridManager.stage.off(); // Убираем старые обработчики
+        this.gridManager.stage.on('click', (event) => {
+            const pos = this.gridManager.stage.getPointerPosition();
+            if (!pos) return;
+
+            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
+            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
+
+            if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
+                this.handleLeftClick(x, y);
+            }
+        });
+
+        this.gridManager.stage.on('contextmenu', (event) => {
+            event.evt.preventDefault(); // Отключаем стандартное меню
+            const pos = this.gridManager.stage.getPointerPosition();
+            if (!pos) return;
+
+            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
+            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
+
+            if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
+                this.handleRightClick(x, y);
+            }
+        });
+
+        this.log('События мыши привязаны.');
+    }
+
+    showContextMenu(x, y) {
+        this.log(`Контекстное меню показано на клетке (${x}, ${y}).`);
+    }
+
+    setup() {
+        this.clear();
+        this.bindMouseEvents();
+        this.log('Игра настроена и готова к запуску.');
+    }
+
+    // Вспомогательные методы
 
     drawBorder() {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
@@ -53,57 +135,15 @@ export class TicTacToe extends BaseModule {
         this.gridManager.updateVisibleTiles();
     }
 
-    handleLeftClick(x, y) {
-        const gridX = x - this.offsetX;
-        const gridY = y - this.offsetY;
-
-        if (gridX >= 0 && gridX < this.fieldWidth && gridY >= 0 && gridY < this.fieldHeight) {
-            if (this.board[gridY][gridX] === null) {
-                this.board[gridY][gridX] = this.currentPlayer;
-                this.drawBorder();
-
-                if (this.checkWin(this.currentPlayer)) {
-                    alert(`Победил ${this.currentPlayer}!`);
-                    this.clear();
-                } else if (this.board.flat().every(cell => cell !== null)) {
-                    alert('Ничья!');
-                    this.clear();
-                } else {
-                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-                }
-            }
-        }
-    }
-
     checkWin(player) {
         // Проверка строк и столбцов
         for (let i = 0; i < 3; i++) {
-            if (
-                this.board[i][0] === player &&
-                this.board[i][1] === player &&
-                this.board[i][2] === player
-            )
-                return true;
-            if (
-                this.board[0][i] === player &&
-                this.board[1][i] === player &&
-                this.board[2][i] === player
-            )
-                return true;
+            if (this.board[i][0] === player && this.board[i][1] === player && this.board[i][2] === player) return true;
+            if (this.board[0][i] === player && this.board[1][i] === player && this.board[2][i] === player) return true;
         }
         // Проверка диагоналей
-        if (
-            this.board[0][0] === player &&
-            this.board[1][1] === player &&
-            this.board[2][2] === player
-        )
-            return true;
-        if (
-            this.board[0][2] === player &&
-            this.board[1][1] === player &&
-            this.board[2][0] === player
-        )
-            return true;
+        if (this.board[0][0] === player && this.board[1][1] === player && this.board[2][2] === player) return true;
+        if (this.board[0][2] === player && this.board[1][1] === player && this.board[2][0] === player) return true;
         return false;
     }
 }
