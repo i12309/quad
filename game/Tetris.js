@@ -32,7 +32,7 @@ export class Tetris extends BaseModule {
         this.interval = null;
         this.score = 0;
         this.fieldWidth = 15; // было 10
-        this.fieldHeight = 30; // было 20
+        this.fieldHeight = 40; // было 20
         this.tileScale = 1; // Множитель размера клетки
         this.offsetX = 0;
         this.offsetY = 0;
