@@ -18,8 +18,15 @@ export class TicTacToe extends BaseModule {
     }
 
     setup() {
-        this.clear();
-        this.drawBorder();
+        this.clear(); // Очищаем поле
+        this.drawBorder(); // Рисуем границы
+    }
+
+    clear() {
+        this.board = Array(3).fill().map(() => Array(3).fill(null)); // Сброс игрового поля
+        this.currentPlayer = 'X'; // Сброс текущего игрока
+        this.gridManager.selectedTiles = {}; // Очистка выбранных клеток
+        this.gridManager.updateVisibleTiles(); // Обновление видимых клеток
     }
 
     drawBorder() {
@@ -42,17 +49,23 @@ export class TicTacToe extends BaseModule {
     }
 
     handleLeftClick(x, y) {
-        if (this.board[y][x] === null) {
-            this.board[y][x] = this.currentPlayer;
-            this.drawBorder();
-            if (this.checkWin(this.currentPlayer)) {
-                alert(`Победил ${this.currentPlayer}!`);
-                this.clear();
-            } else if (this.board.flat().every(cell => cell !== null)) {
-                alert('Ничья!');
-                this.clear();
-            } else {
-                this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+        const gridX = x - this.offsetX;
+        const gridY = y - this.offsetY;
+
+        if (gridX >= 0 && gridX < this.fieldWidth && gridY >= 0 && gridY < this.fieldHeight) {
+            if (this.board[gridY][gridX] === null) {
+                this.board[gridY][gridX] = this.currentPlayer;
+                this.drawBorder();
+
+                if (this.checkWin(this.currentPlayer)) {
+                    alert(`Победил ${this.currentPlayer}!`);
+                    this.clear();
+                } else if (this.board.flat().every(cell => cell !== null)) {
+                    alert('Ничья!');
+                    this.clear();
+                } else {
+                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                }
             }
         }
     }
@@ -60,12 +73,32 @@ export class TicTacToe extends BaseModule {
     checkWin(player) {
         // Проверка строк и столбцов
         for (let i = 0; i < 3; i++) {
-            if (this.board[i][0] === player && this.board[i][1] === player && this.board[i][2] === player) return true;
-            if (this.board[0][i] === player && this.board[1][i] === player && this.board[2][i] === player) return true;
+            if (
+                this.board[i][0] === player &&
+                this.board[i][1] === player &&
+                this.board[i][2] === player
+            )
+                return true;
+            if (
+                this.board[0][i] === player &&
+                this.board[1][i] === player &&
+                this.board[2][i] === player
+            )
+                return true;
         }
         // Проверка диагоналей
-        if (this.board[0][0] === player && this.board[1][1] === player && this.board[2][2] === player) return true;
-        if (this.board[0][2] === player && this.board[1][1] === player && this.board[2][0] === player) return true;
+        if (
+            this.board[0][0] === player &&
+            this.board[1][1] === player &&
+            this.board[2][2] === player
+        )
+            return true;
+        if (
+            this.board[0][2] === player &&
+            this.board[1][1] === player &&
+            this.board[2][0] === player
+        )
+            return true;
         return false;
     }
 }
