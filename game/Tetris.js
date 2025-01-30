@@ -2,46 +2,13 @@
 import { BaseModule } from './BaseModule.js';
 
 const SHAPES = {
-    I: [
-        [1, 1],
-        [1, 1],
-        [1, 1],
-        [1, 1]
-    ],
-    O: [
-        [1, 1, 1, 1],
-        [1, 1, 1, 1]
-    ],
-    T: [
-        [0, 1, 1, 0],
-        [1, 1, 1, 1],
-        [1, 1, 1, 1],
-        [0, 1, 1, 0]
-    ],
-    L: [
-        [1, 0, 0],
-        [1, 0, 0],
-        [1, 0, 0],
-        [1, 1, 1]
-    ],
-    J: [
-        [0, 0, 1],
-        [0, 0, 1],
-        [0, 0, 1],
-        [1, 1, 1]
-    ],
-    S: [
-        [0, 1, 1],
-        [1, 1, 0],
-        [1, 1, 0],
-        [0, 1, 1]
-    ],
-    Z: [
-        [1, 1, 0],
-        [0, 1, 1],
-        [0, 1, 1],
-        [1, 1, 0]
-    ]
+    I: [[1, 1, 1, 1]],
+    O: [[1, 1], [1, 1]],
+    T: [[0, 1, 0], [1, 1, 1]],
+    L: [[1, 0], [1, 0], [1, 1]],
+    J: [[0, 1], [0, 1], [1, 1]],
+    S: [[0, 1, 1], [1, 1, 0]],
+    Z: [[1, 1, 0], [0, 1, 1]]
 };
 
 const COLORS = {
@@ -64,10 +31,9 @@ export class Tetris extends BaseModule {
         this.isRunning = false;
         this.interval = null;
         this.score = 0;
-        this.blockSize = 2; // Каждый блок фигуры 2x2
         this.fieldWidth = 10; // было 10
         this.fieldHeight = 20; // было 20
-        this.tileScale = 1; // Множитель размера клетки
+        this.tileScale = 2; // Множитель размера клетки
         this.offsetX = 0;
         this.offsetY = 0;
         this.nextPiece = null;
@@ -77,9 +43,9 @@ export class Tetris extends BaseModule {
     }
 
     initBoard() {
-        this.board = Array(this.fieldHeight * this.blockSize)
-            .fill()
-            .map(() => Array(this.fieldWidth * this.blockSize).fill(0));
+        this.board = Array(this.fieldHeight).fill().map(() => 
+            Array(this.fieldWidth).fill(0)
+        );
     }
 
     setup() {
@@ -145,23 +111,22 @@ export class Tetris extends BaseModule {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
         
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth * this.blockSize) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight * this.blockSize * 0.8) / 2);
+        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight * 0.8) / 2); // Добавляем вертикальный отступ
 
         // Рисуем только видимую часть поля
         const startY = Math.max(0, Math.floor(-this.gridManager.stage.y() / this.gridManager.totalSize));
-        const endY = Math.min(this.fieldHeight * this.blockSize, startY + Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize));
+        const endY = Math.min(this.fieldHeight, startY + Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize));
 
         for (let y = startY; y < endY; y++) {
-            for (let x = 0; x < this.fieldWidth * this.blockSize; x++) {
+            for (let x = 0; x < this.fieldWidth; x++) {
                 const key = `${this.offsetX + x},${this.offsetY + y}`;
-                // Проверяем, что this.board[y] существует
-                if (this.board[y] && this.board[y][x] !== undefined) {
-                    this.gridManager.selectedTiles[key] = { 
-                        type: 'cell', 
-                        color: this.board[y][x] || '#1A1A1A'
-                    };
-                }
+                this.gridManager.selectedTiles[key] = { 
+                    type: 'cell', 
+                    color: this.board[y][x] || '#1A1A1A',
+                    width: this.tileScale,
+                    height: this.tileScale
+                };
             }
         }
     }
@@ -268,20 +233,12 @@ export class Tetris extends BaseModule {
                     const boardY = this.currentPiece.y + y;
                     const boardX = this.currentPiece.x + x;
                     if (boardY >= 0) {
-                        // Заполняем блок 2x2
-                        for (let dy = 0; dy < this.blockSize; dy++) {
-                            for (let dx = 0; dx < this.blockSize; dx++) {
-                                if (boardY * this.blockSize + dy < this.fieldHeight * this.blockSize &&
-                                    boardX * this.blockSize + dx < this.fieldWidth * this.blockSize) {
-                                    this.board[boardY * this.blockSize + dy][boardX * this.blockSize + dx] = COLORS[this.currentPiece.type];
-                                }
-                            }
-                        }
+                        this.board[boardY][boardX] = COLORS[this.currentPiece.type];
                     }
                 }
             });
         });
-    
+
         this.clearLines();
         this.generateNewPiece();
         
@@ -295,17 +252,17 @@ export class Tetris extends BaseModule {
     clearLines() {
         let linesCleared = 0;
         
-        for (let y = this.fieldHeight * this.blockSize - 1; y >= 0; y--) {
+        for (let y = this.fieldHeight - 1; y >= 0; y--) {
             if (this.board[y].every(cell => cell)) {
                 this.board.splice(y, 1);
-                this.board.unshift(Array(this.fieldWidth * this.blockSize).fill(0));
+                this.board.unshift(Array(this.fieldWidth).fill(0));
                 linesCleared++;
                 y++;
             }
         }
-    
+
         if (linesCleared > 0) {
-            this.score += linesCleared * 100 * this.blockSize;
+            this.score += linesCleared * 100;
             this.updateDisplay();
         }
     }
@@ -330,16 +287,11 @@ export class Tetris extends BaseModule {
                     const boardX = this.currentPiece.x + x;
                     const boardY = this.currentPiece.y + y;
                     if (boardY >= 0) {
-                        // Рисуем блок 2x2
-                        for (let dy = 0; dy < this.blockSize; dy++) {
-                            for (let dx = 0; dx < this.blockSize; dx++) {
-                                const key = `${this.offsetX + boardX * this.blockSize + dx},${this.offsetY + boardY * this.blockSize + dy}`;
-                                this.gridManager.selectedTiles[key] = {
-                                    type: 'piece',
-                                    color: COLORS[this.currentPiece.type]
-                                };
-                            }
-                        }
+                        const key = `${this.offsetX + boardX},${this.offsetY + boardY}`;
+                        this.gridManager.selectedTiles[key] = {
+                            type: 'piece',
+                            color: COLORS[this.currentPiece.type]
+                        };
                     }
                 }
             });
