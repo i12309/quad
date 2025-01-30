@@ -22,6 +22,11 @@ export class TicTacToe extends BaseModule {
         this.drawBorder(); // Рисуем границы
     }
 
+    // Файл: ./game/TicTacToe.js
+    start() {
+        this.setup(); // Инициализируем игру
+    }
+
     clear() {
         this.board = Array(3).fill().map(() => Array(3).fill(null)); // Сброс игрового поля
         this.currentPlayer = 'X'; // Сброс текущего игрока
