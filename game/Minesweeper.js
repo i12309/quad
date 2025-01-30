@@ -66,6 +66,24 @@ export class Minesweeper extends BaseModule {
                 this.pause();
                 alert('Вы проиграли!');
                 this.clear();
+            } else if (cell.value === 0) {
+                // Рекурсивно открываем соседние клетки, если текущая клетка пустая
+                this.revealNeighbors(x, y);
+            }
+        }
+    }
+
+    revealNeighbors(x, y) {
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < this.fieldWidth && ny >= 0 && ny < this.fieldHeight) {
+                    const neighbor = this.board[ny][nx];
+                    if (neighbor.type === 'hidden' && neighbor.value !== 'mine') {
+                        this.toggleCell(nx, ny);
+                    }
+                }
             }
         }
     }
