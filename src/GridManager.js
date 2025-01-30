@@ -25,9 +25,11 @@ export class GridManager {
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey].type == 'text') {
             // Создание текстового элемента
+            posX = x * this.tileSize;
+            posY = y * this.tileSize;
             return new Konva.Text({
-                x: x, // Позиция по оси X
-                y: y, // Позиция по оси Y
+                x: posX, // Позиция по оси X
+                y: posY, // Позиция по оси Y
                 text: this.selectedTiles[cellKey].text, // Текст
                 fontSize: 12, // Размер шрифта
                 fontFamily: 'Arial', // Семейство шрифтов
