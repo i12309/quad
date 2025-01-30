@@ -43,7 +43,6 @@ export class Minesweeper extends BaseModule {
         this.calculateNumbers();
         this.drawBorder();
         this.log('Игровое поле очищено и готово к игре.');
-        console.log(this.board);
     }
 
     update() {
@@ -158,6 +157,7 @@ export class Minesweeper extends BaseModule {
     }
 
     placeMines() {
+        console.log(this.board);
         let minesPlaced = 0;
         while (minesPlaced < this.minesCount) {
             const x = Math.floor(Math.random() * this.fieldWidth);
@@ -167,6 +167,7 @@ export class Minesweeper extends BaseModule {
                 minesPlaced++;
             }
         }
+        console.log(this.board);
     }
 
     calculateNumbers() {
