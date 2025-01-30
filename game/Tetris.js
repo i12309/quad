@@ -49,6 +49,7 @@ export class Tetris extends BaseModule {
     }
 
     setup() {
+        this.initBoard();
         // Настраиваем размеры в GridManager перед инициализацией
         this.gridManager.tileSize = this.gridManager.tileSize * this.tileScale;
         this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
