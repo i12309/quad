@@ -23,7 +23,6 @@ export class Galaga extends BaseModule {
             [0, 1, 15]    // Опускание вниз
         ];
     }
-    }
 
     setup() {
         this.clear();
