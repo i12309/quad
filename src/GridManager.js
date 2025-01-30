@@ -38,6 +38,7 @@ export class GridManager {
                 fontStyle: 'bold', // Стиль шрифта (normal, bold, italic)
             });
         }
+        else {
         return new Konva.Rect({
             id: cellKey,
             x: x * this.totalSize,
@@ -49,6 +50,7 @@ export class GridManager {
             strokeWidth: 0,
             listening: true,
         });
+        }
     }
 
     updateVisibleTiles() {
