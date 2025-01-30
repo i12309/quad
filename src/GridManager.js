@@ -23,6 +23,21 @@ export class GridManager {
 
     createTile(x, y) {
         const cellKey = `${x},${y}`;
+        if (this.selectedTiles[cellKey].type == 'text') {
+            // Создание текстового элемента
+            return new Konva.Text({
+                x: 50, // Позиция по оси X
+                y: 50, // Позиция по оси Y
+                text: 'Привет, Konva!', // Текст
+                fontSize: 24, // Размер шрифта
+                fontFamily: 'Arial', // Семейство шрифтов
+                fill: '#333', // Цвет текста
+                align: 'center', // Выравнивание текста (если есть width)
+                width: 200, // Ширина области текста (опционально)
+                padding: 10, // Внутренний отступ (опционально)
+                fontStyle: 'bold', // Стиль шрифта (normal, bold, italic)
+            });
+        }
         return new Konva.Rect({
             id: cellKey,
             x: x * this.totalSize,
