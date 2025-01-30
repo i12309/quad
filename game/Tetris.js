@@ -24,7 +24,7 @@ const COLORS = {
 export class Tetris extends BaseModule {
     constructor(gridManager) {
         super();
-        this.gameIcon = '🎮';
+        this.gameIcon = '▣';
         this.gameDescription = 'Классический Тетрис. Собирайте линии и набирайте очки!';
         this.name = 'Tetris';
         this.gridManager = gridManager;
