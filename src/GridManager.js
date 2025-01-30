@@ -25,18 +25,16 @@ export class GridManager {
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey].type == 'text') {
             // Создание текстового элемента
-            let posX = x * this.tileSize; 
-            let posY = y * this.tileSize;
             return new Konva.Text({
-                x: posX, // Позиция по оси X
-                y: posY, // Позиция по оси Y
+                x: x * this.tileSize, // Позиция по оси X
+                y: y * this.tileSize, // Позиция по оси Y
                 text: this.selectedTiles[cellKey].text, // Текст
                 fontSize: 12, // Размер шрифта
                 fontFamily: 'Arial', // Семейство шрифтов
                 fill: '#ccc', // Цвет текста
                 align: 'center', // Выравнивание текста (если есть width)
                 width: 200, // Ширина области текста (опционально)
-                padding: 10, // Внутренний отступ (опционально)
+                padding: 0, // Внутренний отступ (опционально)
                 fontStyle: 'bold', // Стиль шрифта (normal, bold, italic)
             });
         }
