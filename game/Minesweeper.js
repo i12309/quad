@@ -58,7 +58,7 @@ export class Minesweeper extends BaseModule {
             this.gridManager.selectedTiles[key] = {
                 type: 'revealed',
                 text: cell.value === 'mine' ? '💣' : cell.value,
-                color: cell.value === 'mine' ? '#FF0000' : '#FFFFFF'
+                color: cell.value === 'mine' ? '#FF0000' : '#53a0c1'
             };
             this.gridManager.updateVisibleTiles();
 
