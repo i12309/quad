@@ -87,6 +87,17 @@
             console.log('Модуль arkanoid не найден. Продолжаем без него.');
         });
 
+        import('./game/Snake.js')
+        .then((module) => {
+            const Snake = module.Snake;
+            const snake = new Snake(gridManager);
+            controls.registerModule(snake);
+            controls.currentModule = snake;
+        })
+        .catch((error) => {
+            console.log('Модуль snake не найден. Продолжаем без него.');
+        });
+
     </script>
 </body>
 </html>
