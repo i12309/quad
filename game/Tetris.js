@@ -50,7 +50,7 @@ export class Tetris extends BaseModule {
 
     setup() {
         // Настраиваем размеры в GridManager перед инициализацией
-        this.gridManager.tileSize = 10 * this.tileScale;
+        this.gridManager.tileSize = this.gridManager.tileSize * this.tileScale;
         this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
 
         // Центрируем камеру на середине поля
@@ -62,6 +62,7 @@ export class Tetris extends BaseModule {
         this.drawBorder();
         this.drawScore();
         this.bindKeyboardEvents();
+        this.start();
     }
 
     start() {
