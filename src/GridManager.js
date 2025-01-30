@@ -25,8 +25,8 @@ export class GridManager {
         const cellKey = `${x},${y}`;
         if (this.selectedTiles[cellKey].type == 'text') {
             // Создание текстового элемента
-            posX = x * this.tileSize; 
-            posY = y * this.tileSize;
+            let posX = x * this.tileSize; 
+            let posY = y * this.tileSize;
             return new Konva.Text({
                 x: posX, // Позиция по оси X
                 y: posY, // Позиция по оси Y
