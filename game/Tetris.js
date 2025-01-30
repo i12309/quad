@@ -77,9 +77,9 @@ export class Tetris extends BaseModule {
     }
 
     initBoard() {
-        this.board = Array(this.fieldHeight).fill().map(() => 
-            Array(this.fieldWidth).fill(0)
-        );
+        this.board = Array(this.fieldHeight * this.blockSize)
+            .fill()
+            .map(() => Array(this.fieldWidth * this.blockSize).fill(0));
     }
 
     setup() {
@@ -147,18 +147,21 @@ export class Tetris extends BaseModule {
         
         this.offsetX = Math.floor((visibleWidth - this.fieldWidth * this.blockSize) / 2);
         this.offsetY = Math.floor((visibleHeight - this.fieldHeight * this.blockSize * 0.8) / 2);
-    
+
         // Рисуем только видимую часть поля
         const startY = Math.max(0, Math.floor(-this.gridManager.stage.y() / this.gridManager.totalSize));
         const endY = Math.min(this.fieldHeight * this.blockSize, startY + Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize));
-    
+
         for (let y = startY; y < endY; y++) {
             for (let x = 0; x < this.fieldWidth * this.blockSize; x++) {
                 const key = `${this.offsetX + x},${this.offsetY + y}`;
-                this.gridManager.selectedTiles[key] = { 
-                    type: 'cell', 
-                    color: this.board[y][x] || '#1A1A1A'
-                };
+                // Проверяем, что this.board[y] существует
+                if (this.board[y] && this.board[y][x] !== undefined) {
+                    this.gridManager.selectedTiles[key] = { 
+                        type: 'cell', 
+                        color: this.board[y][x] || '#1A1A1A'
+                    };
+                }
             }
         }
     }
