@@ -15,9 +15,6 @@ export class Minesweeper extends BaseModule {
         this.board = [];
         this.offsetX = 0;
         this.offsetY = 0;
-        this.gridManager.tileSize = 30;
-        this.gridManager.totalSize = this.tileSize + this.gap;
-        this.gridManager.updateVisibleTiles();
     }
 
     // Реализация обязательных методов из BaseModule
@@ -146,6 +143,9 @@ export class Minesweeper extends BaseModule {
     }
 
     setup() {
+        this.gridManager.tileSize = 30;
+        this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
+        //this.gridManager.updateVisibleTiles();
         this.clear();
         this.bindMouseEvents();
         this.log('Игра настроена и готова к запуску.');
