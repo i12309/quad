@@ -39,6 +39,7 @@ export class Minesweeper extends BaseModule {
         this.board = [];
         this.gridManager.selectedTiles = {};
         this.initBoard();
+        console.log(this.board);
         this.placeMines();
         this.calculateNumbers();
         this.drawBorder();
@@ -157,7 +158,7 @@ export class Minesweeper extends BaseModule {
     }
 
     placeMines() {
-        console.log(this.board);
+        
         let minesPlaced = 0;
         while (minesPlaced < this.minesCount) {
             const x = Math.floor(Math.random() * this.fieldWidth);
