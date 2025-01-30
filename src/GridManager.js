@@ -2,12 +2,15 @@
 export class GridManager {
     constructor(controls) {
         this.controls = controls;
+        this.backgroundColor = '#2C2C2C';
         this.stage = new Konva.Stage({
             container: 'container',
             width: window.innerWidth,
             height: window.innerHeight,
             type: 'webgl',
         });
+        this.layer = new Konva.Layer();
+        this.stage.add(this.layer);
         this.setup();
     }
 
@@ -15,12 +18,10 @@ export class GridManager {
         this.tileSize = 10;
         this.gap = 1;
         this.totalSize = this.tileSize + this.gap;
-        this.backgroundColor = '#2C2C2C';
+        this.selectedTiles = {};
+        this.layer.remove();
         this.layer = new Konva.Layer();
         this.stage.add(this.layer);
-        this.selectedTiles = {};
-        this.tilePool = [];
-        
         this.stage.off();
         this.updateVisibleTiles();
     }
