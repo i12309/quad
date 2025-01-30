@@ -43,59 +43,35 @@
         // Модули игр =====================================================
 
         // Динамическая загрузка PhysicsSimulation (опциональный модуль)
-        import('./game/GameOfLife.js')
-        .then((module) => {
-            const GameOfLife = module.GameOfLife;
-            const gameOfLife = new GameOfLife(gridManager);
-            controls.registerModule(gameOfLife);
-            controls.currentModule = gameOfLife;
-        })
-        .catch((error) => {
-            console.log('Модуль gameOfLife не найден. Продолжаем без него.');
-        });
+        // Список файлов модулей
+        const gameModules = [
+            './game/Snake.js',
+            './game/GameOfLife.js',
+            './game/PingPong.js',
+            './game/Tetris.js'
+        ];
 
-        import('./game/PingPong.js')
-        .then((module) => {
-            const PingPong = module.PingPong;
-            const pingPong = new PingPong(gridManager);
-            controls.registerModule(pingPong);
-            controls.currentModule = pingPong;
-        })
-        .catch((error) => {
-            console.log('Модуль PingPong не найден. Продолжаем без него.');
-        });
-
-        import('./game/Tetris.js')
-        .then((module) => {
-            const Tetris = module.Tetris;
-            const tetris = new Tetris(gridManager);
-            controls.registerModule(tetris);
-            controls.currentModule = tetris;
-        })
-        .catch((error) => {
-            console.log('Модуль Tetris не найден. Продолжаем без него.');
-        });
-
-        import('./game/Arkanoid.js')
-        .then((module) => {
-            const Arkanoid = module.Arkanoid;
-            const arkanoid = new Arkanoid(gridManager);
-            controls.registerModule(arkanoid);
-            controls.currentModule = arkanoid;
-        })
-        .catch((error) => {
-            console.log('Модуль arkanoid не найден. Продолжаем без него.');
-        });
-
-        import('./game/Snake.js')
-        .then((module) => {
-            const Snake = module.Snake;
-            const snake = new Snake(gridManager);
-            controls.registerModule(snake);
-            controls.currentModule = snake;
-        })
-        .catch((error) => {
-            console.log('Модуль snake не найден. Продолжаем без него.');
+        // Загрузка модулей
+        Promise.all(
+            gameModules.map((modulePath) =>
+                import(modulePath)
+                    .then((module) => {
+                        const GameClass = module.default || module[Object.keys(module)[0]]; // Получаем класс из модуля
+                        const gameInstance = new GameClass(gridManager); // Создаём экземпляр игры
+                        controls.registerModule(gameInstance); // Регистрируем модуль
+                        return gameInstance;
+                    })
+                    .catch((error) => {
+                        console.warn(`Модуль ${modulePath} не найден. Продолжаем без него.`);
+                        return null; // Возвращаем null, чтобы не ломать Promise.all
+                    })
+            )
+        ).then((modules) => {
+            // Устанавливаем первый модуль как текущий
+            const firstModule = modules.find((module) => module !== null);
+            if (firstModule) {
+                controls.currentModule = firstModule;
+            }
         });
 
     </script>
