@@ -154,7 +154,7 @@ export class Minesweeper extends BaseModule {
         console.log(this.board);
         this.board = Array(this.fieldHeight)
             .fill()
-            .map(() => Array(this.fieldWidth).fill({ type: 'hidden', value: 0 }));
+            .map(() => Array(this.fieldWidth).fill({ type: 'hidden', value: 'hidden' }));
         console.log(this.board);
         
     }
