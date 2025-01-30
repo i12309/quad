@@ -34,7 +34,7 @@ export class Minesweeper extends BaseModule {
     }
 
     pause() {
-        this.clear(); // Используем clear для инициализации
+        //this.clear(); // Используем clear для инициализации
     }
 
     start() {
