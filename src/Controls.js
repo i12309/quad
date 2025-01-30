@@ -86,6 +86,7 @@ export class Controls {
             this.currentModule = null;
             this.isRunning = false;
             this.gridManager.setup();
+            window.location.reload();
         });
     }
 }
