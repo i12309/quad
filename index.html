@@ -76,6 +76,17 @@
             console.log('Модуль Tetris не найден. Продолжаем без него.');
         });
 
+        import('./game/Arkanoid.js')
+        .then((module) => {
+            const Arkanoid = module.Arkanoid;
+            const arkanoid = new Arkanoid(gridManager);
+            controls.registerModule(arkanoid);
+            controls.currentModule = arkanoid;
+        })
+        .catch((error) => {
+            console.log('Модуль arkanoid не найден. Продолжаем без него.');
+        });
+
     </script>
 </body>
 </html>
