@@ -16,6 +16,7 @@ export class Minesweeper extends BaseModule {
         this.offsetX = 0;
         this.offsetY = 0;
         this.gridManager.tileSize = 30;
+        this.gridManager.updateVisibleTiles();
     }
 
     // Реализация обязательных методов из BaseModule

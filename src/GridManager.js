@@ -15,7 +15,7 @@ export class GridManager {
     }
 
     setup(){
-        this.tileSize = 30;
+        this.tileSize = 10;
         this.gap = 1;
         this.totalSize = this.tileSize + this.gap;
         this.selectedTiles = {};
