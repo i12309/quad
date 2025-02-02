@@ -15,7 +15,7 @@ export class PipeMania extends BaseModule {
         this.interval = null;
         this.pipes = [];
         this.startPos = { x: 0, y: 0 };
-        this.endPos = { x: 7, y: 7 };
+        this.endPos = { x: this.gridSize - 1, y: this.gridSize - 1 }; // Исправление координат
         this.flowPath = [];
         
         this.pipeTypes = {
@@ -36,6 +36,7 @@ export class PipeMania extends BaseModule {
         this.startFlow();
         this.bindMouseEvents(this.gridManager);
         this.gridManager.updateVisibleTiles();
+        this.update(); // Добавлено принудительное обновление
     }
 
     start() {
@@ -59,13 +60,21 @@ export class PipeMania extends BaseModule {
     }
 
     update() {
+        super.update(); // Важно вызывать метод родителя
         this.gridManager.selectedTiles = {};
+
+        // Исправление: Учет смещения поля
+        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+        const offsetX = Math.floor((visibleWidth - this.gridSize) / 2);
+        const offsetY = Math.floor((visibleHeight - this.gridSize) / 2);
 
         for (let y = 0; y < this.gridSize; y++) {
             for (let x = 0; x < this.gridSize; x++) {
                 const pipe = this.pipes[y][x];
-                const key = `${x},${y}`;
-                this.gridManager.selectedTiles[key] = {
+                const screenX = offsetX + x;
+                const screenY = offsetY + y;
+                this.gridManager.selectedTiles[`${screenX},${screenY}`] = { 
                     type: 'text',
                     text: pipe.type === 'S' ? '🚀' : pipe.type === 'E' ? '🏁' : pipe.type,
                     color: this.flowPath.some(p => p.x === x && p.y === y) ? '#00FF00' : '#FFFFFF',
@@ -74,27 +83,26 @@ export class PipeMania extends BaseModule {
             }
         }
 
-        this.gridManager.selectedTiles['timer'] = {
-            type: 'text',
-            text: `Время: ${this.timer}`,
-            color: '#FFA500',
-            x: this.gridSize + 1,
-            y: 0
-        };
-
         this.gridManager.updateVisibleTiles();
     }
 
     bindMouseEvents(gridManager) {
-        gridManager.stage.on('click', (event) => {
+        gridManager.stage.on('click', (e) => {
             const pos = gridManager.stage.getPointerPosition();
-            if (!pos || !this.isRunning) return;
+            if (!pos) return;
 
-            const x = Math.floor(pos.x / gridManager.totalSize);
-            const y = Math.floor(pos.y / gridManager.totalSize);
+            // Учет смещения поля
+            const visibleWidth = Math.ceil(gridManager.stage.width() / gridManager.totalSize);
+            const visibleHeight = Math.ceil(gridManager.stage.height() / gridManager.totalSize);
+            const offsetX = Math.floor((visibleWidth - this.gridSize) / 2);
+            const offsetY = Math.floor((visibleHeight - this.gridSize) / 2);
+
+            const x = Math.floor(pos.x / gridManager.totalSize) - offsetX;
+            const y = Math.floor(pos.y / gridManager.totalSize) - offsetY;
 
             if (this.isValidPosition(x, y)) {
                 this.rotatePipe(x, y);
+                this.update(); // Принудительное обновление после действия
             }
         });
     }
