@@ -1,0 +1,185 @@
+// Файл: ./game/RaceGame.js
+import { BaseModule } from './BaseModule.js';
+
+export class RaceGame extends BaseModule {
+    constructor(gridManager) {
+        super();
+        this.name = 'RaceGame';
+        this.gameIcon = '🏎️';
+        this.gameDescription = 'Гоночная игра. Машинка из квадратиков движется вверх, избегая препятствий';
+        this.gridManager = gridManager;
+        
+        this.isRunning = false;
+        this.interval = null;
+        this.tickSpeed = 100;
+        this.score = 0;
+        this.speedMultiplier = 1;
+
+        // Инициализация параметров игры
+        this.fieldWidth = Math.floor(gridManager.stage.width() / gridManager.totalSize);
+        this.fieldHeight = Math.floor(gridManager.stage.height() / gridManager.totalSize);
+
+        this.car = {
+            baseX: Math.floor(this.fieldWidth / 2),
+            baseY: this.fieldHeight - 5,
+            parts: [
+                {dx: 0, dy: 0},
+                {dx: -1, dy: 0},
+                {dx: 1, dy: 0},
+                {dx: 0, dy: -1},
+                {dx: 0, dy: -2}
+            ]
+        };
+
+        this.obstacles = [];
+        this.roadOffset = 0;
+    }
+
+    // Реализация обязательных методов BaseModule
+    setup() {
+        this.clear();
+        this.generateRoad();
+        this.bindMouseEvents();
+        this.start();
+    }
+
+    start() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            this.interval = setInterval(() => this.update(), this.tickSpeed);
+        }
+    }
+
+    pause() {
+        clearInterval(this.interval);
+        this.isRunning = false;
+    }
+
+    clear() {
+        this.pause();
+        this.score = 0;
+        this.speedMultiplier = 1;
+        this.car.baseX = Math.floor(this.fieldWidth / 2);
+        this.obstacles = [];
+        this.roadOffset = 0;
+        this.gridManager.selectedTiles = {};
+    }
+
+    update() {
+        this.roadOffset = (this.roadOffset + 1) % 3;
+        
+        if (Math.random() < 0.25) {
+            this.obstacles.push({
+                x: Math.floor(Math.random() * (this.fieldWidth - 2)) + 1,
+                y: -2
+            });
+        }
+
+        this.obstacles = this.obstacles.filter(obs => {
+            obs.y += 1 * this.speedMultiplier;
+            return obs.y < this.fieldHeight + 2;
+        });
+
+        if (this.checkCollision()) {
+            this.gameOver();
+            return;
+        }
+
+        this.score += 1;
+        this.speedMultiplier = 1 + Math.floor(this.score / 500) * 0.3;
+        this.updateGrid();
+    }
+
+    // Реализация дополнительных методов
+    checkCollision() {
+        return this.obstacles.some(obs => 
+            this.car.parts.some(part => 
+                obs.x === this.car.baseX + part.dx && 
+                obs.y === this.car.baseY + part.dy
+            )
+        );
+    }
+
+    generateRoad() {
+        for (let y = 0; y < this.fieldHeight; y++) {
+            const laneX = this.fieldWidth / 2;
+            if ((y + this.roadOffset) % 3 === 0) {
+                this.gridManager.selectedTiles[`${laneX},${y}`] = {type: 'road', color: '#FFFF00'};
+            }
+        }
+    }
+
+    updateGrid() {
+        this.gridManager.selectedTiles = {};
+
+        this.generateRoad();
+
+        this.car.parts.forEach(part => {
+            const x = this.car.baseX + part.dx;
+            const y = this.car.baseY + part.dy;
+            this.gridManager.selectedTiles[`${x},${y}`] = {
+                type: 'car',
+                color: part.dy === -2 ? '#FF0000' : '#00FF00'
+            };
+        });
+
+        this.obstacles.forEach(obs => {
+            for (let dy = 0; dy < 2; dy++) {
+                this.gridManager.selectedTiles[`${obs.x},${obs.y + dy}`] = {
+                    type: 'obstacle',
+                    color: '#808080'
+                };
+            }
+        });
+
+        // Добавление текстовых элементов
+        this.gridManager.selectedTiles['score'] = {
+            type: 'text',
+            text: `Score: ${this.score}`,
+            color: '#FFFFFF',
+            x: 1,
+            y: 0
+        };
+
+        this.gridManager.selectedTiles['speed'] = {
+            type: 'text',
+            text: `Speed: x${this.speedMultiplier.toFixed(1)}`,
+            color: '#FFA500',
+            x: 1,
+            y: 1
+        };
+
+        this.gridManager.updateVisibleTiles();
+    }
+
+    bindMouseEvents() {
+        // Реализация для совместимости с BaseModule
+        this.gridManager.stage.on('click', (e) => {
+            // Логика клика (если требуется)
+        });
+
+        // Управление клавиатурой
+        document.addEventListener('keydown', (e) => {
+            if (!this.isRunning) return;
+            
+            if (e.code === 'ArrowLeft') {
+                this.car.baseX = Math.max(1, this.car.baseX - 1);
+            }
+            if (e.code === 'ArrowRight') {
+                this.car.baseX = Math.min(this.fieldWidth - 2, this.car.baseX + 1);
+            }
+        });
+    }
+
+    gameOver() {
+        this.pause();
+        alert(`GAME OVER! Final Score: ${this.score}`);
+        this.setup();
+    }
+
+    // Заглушки для неиспользуемых методов
+    toggleCell(x, y) {}
+    handleLeftClick(x, y) {}
+    handleRightClick(x, y) {}
+    showContextMenu(x, y) {}
+}
