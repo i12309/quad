@@ -60,7 +60,7 @@ export class PipeMania extends BaseModule {
     }
 
     update() {
-        super.update(); // Важно вызывать метод родителя
+        //super.update(); // Важно вызывать метод родителя
         this.gridManager.selectedTiles = {};
 
         // Исправление: Учет смещения поля
