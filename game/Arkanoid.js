@@ -130,6 +130,13 @@ export class Arkanoid extends BaseModule {
         const ballKey = `${this.offsetX + this.ball.x},${this.offsetY + this.ball.y}`;
         this.gridManager.selectedTiles[ballKey] = { type: 'ball', color: '#FFFF00' };
 
+        // Удалить все ячейки с type === 'platform'
+        Object.keys(this.gridManager.selectedTiles).forEach((key) => {
+            if (this.gridManager.selectedTiles[key].type === 'platform') {
+                delete this.gridManager.selectedTiles[key];
+            }
+        });
+        
         // Отрисовка платформы
         for (let i = 0; i < this.platform.width; i++) {
             const platformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 2}`;
