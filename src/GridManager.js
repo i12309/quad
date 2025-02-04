@@ -3,6 +3,7 @@ export class GridManager {
     constructor(controls) {
         this.controls = controls;
         this.backgroundColor = '#2C2C2C';
+        
         this.stage = new Konva.Stage({
             container: 'container',
             width: window.innerWidth,
@@ -11,19 +12,11 @@ export class GridManager {
         });
         this.layer = new Konva.Layer();
         this.stage.add(this.layer);
-        this.setup();
-    }
 
-    setup(){
         this.tileSize = 10;
         this.gap = 1;
         this.totalSize = this.tileSize + this.gap;
         this.selectedTiles = {};
-        this.layer.remove();
-        this.layer = new Konva.Layer();
-        this.stage.add(this.layer);
-        this.stage.off();
-        this.updateVisibleTiles();
     }
 
     createTile(x, y) {

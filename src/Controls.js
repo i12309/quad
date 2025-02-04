@@ -70,6 +70,7 @@ export class Controls {
         });
 
         backToMenuButton.addEventListener('click', () => {
+            /*
             if (this.currentModule) {
                 this.currentModule.pause(); // Останавливаем игру
                 this.currentModule.clear(); // Очищаем игровое поле
@@ -86,6 +87,7 @@ export class Controls {
             this.currentModule = null;
             this.isRunning = false;
             this.gridManager.setup();
+            */
             window.location.reload();
         });
     }
