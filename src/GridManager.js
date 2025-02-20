@@ -13,8 +13,8 @@ export class GridManager {
         this.layer = new Konva.Layer();
         this.stage.add(this.layer);
 
-        this.tileSize = 10;
-        this.gap = 1;
+        this.tileSize = 12;
+        this.gap = 3;
         this.totalSize = this.tileSize + this.gap;
         this.selectedTiles = {};
     }
@@ -37,13 +37,28 @@ export class GridManager {
             });
         }
         else {
+        // Палитра цветов в HEX
+        const colors = [
+            '#39D353', // rgb(57, 211, 83)
+            '#26A641', // rgb(38, 166, 65)
+            '#006D32', // rgb(0, 109, 50)
+            '#0E4429', // rgb(14, 68, 41)
+            '#2D333B'  // rgb(45, 51, 59)
+        ];
         return new Konva.Rect({
             id: cellKey,
             x: x * this.totalSize,
             y: y * this.totalSize,
             width: this.tileSize,
             height: this.tileSize,
-            fill: this.selectedTiles[cellKey].color, // Цвет берем из selectedTiles
+            //fill: this.selectedTiles[cellKey].color, // Цвет берем из selectedTiles
+        // Случайный цвет из палитры
+        fill: colors[Math.floor(Math.random() * colors.length)],
+            // Закругление углов (можно задавать разные значения)
+            cornerRadiusTL: 2, // top-left
+            cornerRadiusTR: 2, // top-right
+            cornerRadiusBR: 2, // bottom-right
+            cornerRadiusBL: 2, // bottom-left
             stroke: null,
             strokeWidth: 0,
             listening: true,
