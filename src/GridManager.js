@@ -46,26 +46,15 @@ export class GridManager {
             '#2D333B'  // rgb(45, 51, 59)
         ];
 
-        return new Konva.Path({
-            id: cellKey,
-            x: x * this.totalSize,
-            y: y * this.totalSize,
-            data: this.createRoundedRectPath(0, 0, this.tileSize, this.tileSize, 12), // Закругление углов
-            fill: colors[Math.floor(Math.random() * colors.length)], // Случайный цвет
-            stroke: null,
-            strokeWidth: 0,
-            listening: true,
-        });
-        /*
         return new Konva.Rect({
             id: cellKey,
             x: x * this.totalSize,
             y: y * this.totalSize,
             width: this.tileSize,
             height: this.tileSize,
-            //fill: this.selectedTiles[cellKey].color, // Цвет берем из selectedTiles
+            fill: this.selectedTiles[cellKey].color, // Цвет берем из selectedTiles
         // Случайный цвет из палитры
-        fill: colors[Math.floor(Math.random() * colors.length)],
+        //fill: colors[Math.floor(Math.random() * colors.length)],
             // Закругление углов (можно задавать разные значения)
             cornerRadiusTL: 2, // top-left
             cornerRadiusTR: 2, // top-right
@@ -74,24 +63,10 @@ export class GridManager {
             stroke: null,
             strokeWidth: 0,
             listening: true,
-        });*/
+        });
         }
     }
 
-    createRoundedRectPath(x, y, width, height, radius) {
-        return `
-            M ${x + radius},${y}
-            H ${x + width - radius}
-            Q ${x + width},${y} ${x + width},${y + radius}
-            V ${y + height - radius}
-            Q ${x + width},${y + height} ${x + width - radius},${y + height}
-            H ${x + radius}
-            Q ${x},${y + height} ${x},${y + height - radius}
-            V ${y + radius}
-            Q ${x},${y} ${x + radius},${y}
-            Z
-        `;
-    }
 
     updateVisibleTiles() {
         this.layer.destroyChildren();
