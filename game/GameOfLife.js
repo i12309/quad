@@ -101,7 +101,7 @@ export class GameOfLife extends BaseModule {
         if (this.gridManager.selectedTiles[cellKey]) {
             delete this.gridManager.selectedTiles[cellKey];
         } else {
-            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: '#CCCCCC' };
+            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: '#39D353' };
         }
         this.gridManager.updateVisibleTiles();
     }
