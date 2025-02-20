@@ -91,6 +91,7 @@ export class GridManager {
             Q ${x},${y} ${x + radius},${y}
             Z
         `;
+    }
 
     updateVisibleTiles() {
         this.layer.destroyChildren();
