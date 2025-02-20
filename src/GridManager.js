@@ -45,6 +45,18 @@ export class GridManager {
             '#0E4429', // rgb(14, 68, 41)
             '#2D333B'  // rgb(45, 51, 59)
         ];
+
+        return new Konva.Path({
+            id: cellKey,
+            x: x * this.totalSize,
+            y: y * this.totalSize,
+            data: this.createRoundedRectPath(0, 0, this.tileSize, this.tileSize, 12), // Закругление углов
+            fill: colors[Math.floor(Math.random() * colors.length)], // Случайный цвет
+            stroke: null,
+            strokeWidth: 0,
+            listening: true,
+        });
+        /*
         return new Konva.Rect({
             id: cellKey,
             x: x * this.totalSize,
@@ -62,9 +74,23 @@ export class GridManager {
             stroke: null,
             strokeWidth: 0,
             listening: true,
-        });
+        });*/
         }
     }
+
+    createRoundedRectPath(x, y, width, height, radius) {
+        return `
+            M ${x + radius},${y}
+            H ${x + width - radius}
+            Q ${x + width},${y} ${x + width},${y + radius}
+            V ${y + height - radius}
+            Q ${x + width},${y + height} ${x + width - radius},${y + height}
+            H ${x + radius}
+            Q ${x},${y + height} ${x},${y + height - radius}
+            V ${y + radius}
+            Q ${x},${y} ${x + radius},${y}
+            Z
+        `;
 
     updateVisibleTiles() {
         this.layer.destroyChildren();
