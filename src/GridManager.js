@@ -56,10 +56,7 @@ export class GridManager {
         // Случайный цвет из палитры
         //fill: colors[Math.floor(Math.random() * colors.length)],
             // Закругление углов (можно задавать разные значения)
-            cornerRadiusTL: 2, // top-left
-            cornerRadiusTR: 2, // top-right
-            cornerRadiusBR: 2, // bottom-right
-            cornerRadiusBL: 2, // bottom-left
+            cornerRadius: 2, 
             stroke: null,
             strokeWidth: 0,
             listening: true,
