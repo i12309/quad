@@ -69,7 +69,7 @@ export class pole extends BaseModule {
 
         // Рисуем границы поля
         for (let x = 1; x < this.fieldWidth + 1; x++) {
-            for (let y = 1+this.offsetY; y < this.fieldHeight + 1; y++) {
+            for (let y = 1; y < this.fieldHeight + 1; y++) {
                 const key = `${x},${y}`;
                 const _color = this.colors[Math.floor(Math.random() * this.colors.length)];
                 this.gridManager.selectedTiles[key] = { type: 'wall', color: _color };
