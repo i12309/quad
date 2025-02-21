@@ -1,7 +1,7 @@
 // Файл: ./game/pole.js
 import { BaseModule } from './BaseModule.js';
 
-export class Snake extends BaseModule {
+export class pole extends BaseModule {
     constructor(gridManager) {
         super();
         this.gameIcon = '';
@@ -29,7 +29,7 @@ export class Snake extends BaseModule {
 
     setup() {
         this.clear();
-        this.drawBorder();
+        this.draw();
     }
 
     start() {
@@ -49,7 +49,7 @@ export class Snake extends BaseModule {
     clear() {
         this.pause();
         this.gridManager.selectedTiles = {};
-        this.drawBorder();
+        this.draw();
         this.gridManager.updateVisibleTiles();
     }
 
