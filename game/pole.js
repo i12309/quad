@@ -53,6 +53,12 @@ export class pole extends BaseModule {
         this.gridManager.updateVisibleTiles();
     }
 
+    update() {
+        this.gridManager.selectedTiles = {};
+        this.draw();
+        this.gridManager.updateVisibleTiles();
+    }
+
     draw() {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
