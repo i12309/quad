@@ -37,14 +37,7 @@ export class GridManager {
             });
         }
         else {
-        // Палитра цветов в HEX
-        const colors = [
-            '#39D353', // rgb(57, 211, 83)
-            '#26A641', // rgb(38, 166, 65)
-            '#006D32', // rgb(0, 109, 50)
-            '#0E4429', // rgb(14, 68, 41)
-            '#2D333B'  // rgb(45, 51, 59)
-        ];
+
 
         return new Konva.Rect({
             id: cellKey,
@@ -53,8 +46,6 @@ export class GridManager {
             width: this.tileSize,
             height: this.tileSize,
             fill: this.selectedTiles[cellKey].color, // Цвет берем из selectedTiles
-        // Случайный цвет из палитры
-        //fill: colors[Math.floor(Math.random() * colors.length)],
             // Закругление углов (можно задавать разные значения)
             cornerRadius: 2, 
             stroke: null,

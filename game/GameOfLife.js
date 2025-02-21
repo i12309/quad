@@ -20,6 +20,15 @@ export class GameOfLife extends BaseModule {
             ArrowUp: false,
             ArrowDown: false,
         };
+
+        // Палитра цветов в HEX
+        const colors = [
+            '#39D353', // rgb(57, 211, 83)
+            '#26A641', // rgb(38, 166, 65)
+            '#006D32', // rgb(0, 109, 50)
+            '#0E4429', // rgb(14, 68, 41)
+            '#2D333B'  // rgb(45, 51, 59)
+        ];
     }
 
     setup() {
@@ -101,7 +110,7 @@ export class GameOfLife extends BaseModule {
         if (this.gridManager.selectedTiles[cellKey]) {
             delete this.gridManager.selectedTiles[cellKey];
         } else {
-            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: '#39D353' };
+            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: Math.floor(Math.random() * colors.length) };
         }
         this.gridManager.updateVisibleTiles();
     }
