@@ -22,7 +22,7 @@ export class GameOfLife extends BaseModule {
         };
 
         // Палитра цветов в HEX
-        const colors = [
+        this.colors = [
             '#39D353', // rgb(57, 211, 83)
             '#26A641', // rgb(38, 166, 65)
             '#006D32', // rgb(0, 109, 50)
