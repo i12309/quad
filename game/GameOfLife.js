@@ -20,6 +20,9 @@ export class GameOfLife extends BaseModule {
             ArrowUp: false,
             ArrowDown: false,
         };
+    
+        gridManager.tileSize = 12;
+        gridManager.gap = 4;
 
         // Палитра цветов в HEX
         this.colors = [
@@ -110,7 +113,7 @@ export class GameOfLife extends BaseModule {
         if (this.gridManager.selectedTiles[cellKey]) {
             delete this.gridManager.selectedTiles[cellKey];
         } else {
-            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: Math.floor(Math.random() * this.colors.length) };
+            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: '#39D353' };
         }
         this.gridManager.updateVisibleTiles();
     }
