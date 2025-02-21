@@ -20,6 +20,14 @@ export class GameOfLife extends BaseModule {
             ArrowUp: false,
             ArrowDown: false,
         };
+        // Палитра цветов в HEX
+        this.colors = [
+            '#39D353', // rgb(57, 211, 83)
+            '#26A641', // rgb(38, 166, 65)
+            '#006D32', // rgb(0, 109, 50)
+            '#0E4429', // rgb(14, 68, 41)
+            '#2D333B'  // rgb(45, 51, 59)
+        ];
     }
 
     setup() {
