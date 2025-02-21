@@ -65,7 +65,7 @@ export class pole extends BaseModule {
         for (let x = 1; x < this.fieldWidth + 1; x++) {
             for (let y = 1; y < this.fieldHeight + 1; y++) {
                 const key = `${x},${y}`;
-                const _color = Math.floor(Math.random() * colors.length);
+                const _color = Math.floor(Math.random() * this.colors.length);
                 this.gridManager.selectedTiles[key] = { type: 'wall', color: _color };
             }
         }
