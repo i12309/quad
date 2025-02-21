@@ -63,7 +63,7 @@ export class pole extends BaseModule {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
         this.fieldWidth = visibleWidth; //Math.floor(visibleWidth * 0.9); // 90% ширины
-        this.fieldHeight = visibleHeight; //Math.floor(visibleHeight * 0.8); // 80% высоты
+        this.fieldHeight = Math.floor(visibleHeight * 0.3); // 80% высоты
         this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
         this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
 
