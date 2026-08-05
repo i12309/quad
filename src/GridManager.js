@@ -1,6 +1,9 @@
 export class GridManager {
     constructor(controls) {
         this.controls = controls;
+        this.container = typeof document !== 'undefined'
+            ? document.getElementById('container')
+            : null;
         this.backgroundColor = '#11161f';
         this.defaultTileSize = 12;
         this.defaultGap = 4;
@@ -9,10 +12,11 @@ export class GridManager {
         this.totalSize = this.tileSize + this.gap;
         this.selectedTiles = {};
 
+        const viewport = this.getViewportSize();
         this.stage = new Konva.Stage({
             container: 'container',
-            width: window.innerWidth,
-            height: window.innerHeight,
+            width: viewport.width,
+            height: viewport.height,
         });
         this.layer = new Konva.Layer({ listening: true });
         this.stage.add(this.layer);
@@ -25,6 +29,53 @@ export class GridManager {
         this.tileSize = Math.max(6, Number(tileSize) || this.defaultTileSize);
         this.gap = Math.max(0, Number(gap) || 0);
         this.totalSize = this.tileSize + this.gap;
+    }
+
+    getViewportSize() {
+        const fallbackWidth = typeof window !== 'undefined' ? Number(window.innerWidth) : 1;
+        const fallbackHeight = typeof window !== 'undefined' ? Number(window.innerHeight) : 1;
+        const containerWidth = Number(this.container?.clientWidth);
+        const containerHeight = Number(this.container?.clientHeight);
+        const width = Number.isFinite(containerWidth) ? Math.max(1, containerWidth) : Math.max(1, fallbackWidth || 1);
+        const height = Number.isFinite(containerHeight) ? Math.max(1, containerHeight) : Math.max(1, fallbackHeight || 1);
+        return { width, height };
+    }
+
+    getViewportAnchor() {
+        const screenX = this.stage.width() / 2;
+        const screenY = this.stage.height() / 2;
+        return {
+            screenX,
+            screenY,
+            gridX: (screenX - this.stage.x()) / this.totalSize,
+            gridY: (screenY - this.stage.y()) / this.totalSize,
+        };
+    }
+
+    restoreViewportAnchor(anchor) {
+        if (!anchor) return;
+        const screenX = this.stage.width() / 2;
+        const screenY = this.stage.height() / 2;
+        this.stage.x(screenX - anchor.gridX * this.totalSize);
+        this.stage.y(screenY - anchor.gridY * this.totalSize);
+    }
+
+    setViewportTop(value = 0, { notifyModule = false } = {}) {
+        const top = Math.max(0, Math.round(Number(value) || 0));
+        if (this.container?.style) this.container.style.top = `${top}px`;
+        return this.resizeToViewport({ notifyModule });
+    }
+
+    resizeToViewport({ notifyModule = true } = {}) {
+        const viewport = this.getViewportSize();
+        const changed = this.stage.width() !== viewport.width || this.stage.height() !== viewport.height;
+
+        this.stage.width(viewport.width);
+        this.stage.height(viewport.height);
+
+        if (changed && notifyModule) this.controls?.currentModule?.onResize?.();
+        this.updateVisibleTiles();
+        return changed;
     }
 
     resetView() {
@@ -41,10 +92,10 @@ export class GridManager {
     }
 
     handleResize() {
-        this.stage.width(window.innerWidth);
-        this.stage.height(window.innerHeight);
-        this.controls?.currentModule?.onResize?.();
-        this.updateVisibleTiles();
+        const viewportTop = this.controls?.getGameViewportTop?.() ?? 0;
+        const changed = this.setViewportTop(viewportTop, { notifyModule: false });
+        const scaleChanged = this.controls?.reconcileGridScaleToViewport?.() ?? false;
+        if (changed && !scaleChanged) this.controls?.currentModule?.onResize?.();
     }
 
     getGridPosition(pointerPosition = this.stage.getPointerPosition()) {

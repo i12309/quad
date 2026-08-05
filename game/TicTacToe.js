@@ -19,14 +19,20 @@ export class TicTacToe extends BaseModule {
         this.gameOver = false;
         this.winningCells = [];
         this.resultMessage = '';
+        this.gridScale = {
+            min: 36,
+            max: 112,
+            step: 4,
+            defaultTileSize: 72,
+            defaultGap: 4,
+            value: 72,
+            fitColumns: 5,
+            fitRows: 7,
+        };
     }
 
     setup() {
-        this.gridManager.setGridMetrics?.(72, this.gridManager.gap);
-        if (!this.gridManager.setGridMetrics) {
-            this.gridManager.tileSize = 72;
-            this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
-        }
+        this.applyGridScale();
         this.bindMouseEvents();
         this.reset();
     }

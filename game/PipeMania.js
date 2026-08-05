@@ -36,12 +36,22 @@ export class PipeMania extends BaseModule {
         this.offsetX = 0;
         this.offsetY = 0;
         this.finished = false;
+        this.gridScale = {
+            min: 16,
+            max: 48,
+            step: 2,
+            defaultTileSize: 32,
+            defaultGap: 4,
+            value: 32,
+            fitColumns: 22,
+            fitRows: 12,
+        };
     }
 
     setup() {
         this.pause();
         this.clearBindings();
-        this.gridManager.setGridMetrics?.(32, 4);
+        this.applyGridScale();
         this.resetState();
         this.bindMouseEvents();
         this.render();

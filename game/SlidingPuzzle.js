@@ -18,14 +18,20 @@ export class SlidingPuzzle extends BaseModule {
         this.moves = 0;
         this.gameOver = false;
         this.resultMessage = '';
+        this.gridScale = {
+            min: 28,
+            max: 88,
+            step: 4,
+            defaultTileSize: 56,
+            defaultGap: 4,
+            value: 56,
+            fitColumns: 6,
+            fitRows: 7,
+        };
     }
 
     setup() {
-        this.gridManager.setGridMetrics?.(56, this.gridManager.gap);
-        if (!this.gridManager.setGridMetrics) {
-            this.gridManager.tileSize = 56;
-            this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
-        }
+        this.applyGridScale();
         this.bindMouseEvents();
         this.reset();
     }

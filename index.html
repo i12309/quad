@@ -33,6 +33,16 @@
             </div>
 
             <div class="control-buttons">
+                <div id="grid-scale-control" class="grid-scale-control" hidden>
+                    <span class="grid-scale-label">Клетка</span>
+                    <button id="grid-scale-decrease" class="scale-button" type="button"
+                        aria-label="Уменьшить квадратики">−</button>
+                    <input id="grid-scale-input" type="range" min="8" max="32" step="2" value="12"
+                        aria-label="Размер квадратиков">
+                    <button id="grid-scale-increase" class="scale-button" type="button"
+                        aria-label="Увеличить квадратики">+</button>
+                    <output id="grid-scale-value" for="grid-scale-input">12 px</output>
+                </div>
                 <button id="start-stop-btn" class="primary-button" type="button">Старт</button>
                 <button id="clear-btn" type="button">Заново</button>
                 <button id="back-to-menu-btn" type="button">Все игры</button>

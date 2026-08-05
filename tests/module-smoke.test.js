@@ -41,6 +41,15 @@ const gameClasses = [
     LivingField,
 ];
 
+const scalableGameClasses = [
+    GameOfLife,
+    Minesweeper,
+    SlidingPuzzle,
+    TicTacToe,
+    Tetris,
+    PipeMania,
+];
+
 test('all menu games complete setup, render, clear and destroy', () => {
     for (const GameClass of gameClasses) {
         const grid = createFakeGrid();
@@ -52,6 +61,57 @@ test('all menu games complete setup, render, clear and destroy', () => {
         assert.ok(grid.drawCount > drawsAfterSetup, `${game.name}: render after clear`);
         assert.doesNotThrow(() => game.destroy(), `${game.name}: destroy`);
         assert.equal(grid.stage.handlers.size, 0, `${game.name}: stage handlers cleaned`);
+    }
+});
+
+test('scale opt-in games redraw in place and keep their lifecycle clean', () => {
+    for (const GameClass of scalableGameClasses) {
+        const grid = createFakeGrid();
+        const game = new GameClass(grid);
+        const scale = game.gridScale;
+
+        assert.ok(scale, `${game.name}: declares scale support`);
+        assert.ok(scale.min < scale.max, `${game.name}: valid scale limits`);
+        assert.ok(scale.defaultTileSize >= scale.min && scale.defaultTileSize <= scale.max,
+            `${game.name}: default is inside scale limits`);
+        assert.ok(scale.step > 0, `${game.name}: positive scale step`);
+
+        game.setup();
+        const state = Array.isArray(game.board) && game.board.length
+            ? game.board
+            : Array.isArray(game.pipes) && game.pipes.length
+                ? game.pipes
+                : grid.selectedTiles;
+        const handlersBeforeScale = grid.stage.handlers.size;
+        const drawsBeforeScale = grid.drawCount;
+        const targetTileSize = scale.max === grid.tileSize ? scale.min : scale.max;
+
+        const context = game.applyGridScale(targetTileSize);
+        game.onGridScaleChange(context);
+
+        assert.equal(grid.tileSize, targetTileSize, `${game.name}: applies selected tile size`);
+        const expectedGap = scale.defaultGap * targetTileSize / scale.defaultTileSize;
+        assert.ok(Math.abs(grid.gap - expectedGap) <= 1, `${game.name}: gap scales proportionally`);
+        assert.ok(grid.drawCount > drawsBeforeScale, `${game.name}: redraws after scale`);
+        assert.equal(grid.stage.handlers.size, handlersBeforeScale,
+            `${game.name}: scale does not duplicate stage bindings`);
+
+        const currentState = Array.isArray(game.board) && game.board.length
+            ? game.board
+            : Array.isArray(game.pipes) && game.pipes.length
+                ? game.pipes
+                : grid.selectedTiles;
+        assert.equal(currentState, state, `${game.name}: scale keeps the current game state`);
+
+        grid.stage.pointerPosition = {
+            x: grid.stage.x() + grid.totalSize * 2 + 1,
+            y: grid.stage.y() + grid.totalSize * 3 + 1,
+        };
+        assert.deepEqual(grid.getGridPosition(), { x: 2, y: 3 },
+            `${game.name}: hit testing follows the scaled grid`);
+
+        game.destroy();
+        assert.equal(grid.stage.handlers.size, 0, `${game.name}: destroy cleans stage bindings`);
     }
 });
 

@@ -13,9 +13,18 @@ export class GameOfLife extends BaseModule {
         this.isDragging = false;
         this.lastPointerPosition = null;
         this.colors = ['#39D353', '#26A641', '#15913A', '#087B35', '#006D32'];
+        this.gridScale = {
+            min: 8,
+            max: 32,
+            step: 2,
+            defaultTileSize: 12,
+            defaultGap: 4,
+            value: 12,
+        };
     }
 
     setup() {
+        this.applyGridScale();
         this.clearBindings();
         this.bindInputEvents();
         this.clear();
@@ -171,6 +180,11 @@ export class GameOfLife extends BaseModule {
     }
 
     onResize() {
+        this.render();
+    }
+
+    onGridScaleChange(context) {
+        this.gridManager.restoreViewportAnchor?.(context?.anchor);
         this.render();
     }
 

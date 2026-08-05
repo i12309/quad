@@ -24,7 +24,10 @@ button {
 
 #container {
     position: fixed;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     background-color: #11161f;
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
@@ -120,7 +123,8 @@ h1 {
 }
 
 .game-button:focus-visible,
-.control-buttons button:focus-visible {
+.control-buttons button:focus-visible,
+.grid-scale-control input:focus-visible {
     outline: 3px solid rgba(115, 224, 169, 0.58);
     outline-offset: 2px;
 }
@@ -160,7 +164,7 @@ h1 {
     display: grid;
     grid-template-columns: minmax(180px, 1fr) auto;
     gap: 10px 20px;
-    width: min(920px, calc(100vw - 28px));
+    width: min(1100px, calc(100vw - 28px));
     padding: 12px 14px;
     border-radius: 18px;
     transform: translateX(-50%);
@@ -200,6 +204,36 @@ h1 {
     gap: 7px;
 }
 
+.grid-scale-control {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    gap: 7px;
+    padding: 4px 7px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 11px;
+    background: rgba(10, 15, 22, 0.5);
+}
+
+.grid-scale-label,
+#grid-scale-value {
+    color: #aeb8c8;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+#grid-scale-value {
+    min-width: 38px;
+    color: #eef3f9;
+    font-variant-numeric: tabular-nums;
+}
+
+#grid-scale-input {
+    width: 92px;
+    accent-color: #73e0a9;
+    cursor: pointer;
+}
+
 .control-buttons button {
     min-height: 38px;
     padding: 8px 14px;
@@ -208,6 +242,23 @@ h1 {
     border-radius: 10px;
     background: #293547;
     cursor: pointer;
+}
+
+.control-buttons .scale-button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    min-height: 28px;
+    padding: 0;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.control-buttons button:disabled {
+    cursor: default;
+    filter: none;
+    opacity: 0.4;
 }
 
 .control-buttons .primary-button {
@@ -223,10 +274,14 @@ h1 {
 
 .game-status {
     grid-column: 1 / -1;
-    min-height: 18px;
+    height: 18px;
     margin: 0;
+    overflow: hidden;
     color: #aeb8c8;
     font-size: 12px;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .game-status[data-tone="result"],
@@ -247,6 +302,20 @@ h1 {
     display: none !important;
 }
 
+@media (max-width: 900px) {
+    .game-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .control-buttons {
+        flex-wrap: wrap;
+    }
+
+    .game-status {
+        grid-column: 1;
+    }
+}
+
 @media (max-width: 680px) {
     .menu-panel {
         inset: 8px;
@@ -260,15 +329,16 @@ h1 {
 
     .game-toolbar {
         top: 8px;
-        grid-template-columns: 1fr;
         width: calc(100vw - 16px);
     }
 
-    .control-buttons {
-        flex-wrap: wrap;
+    .grid-scale-control {
+        order: 2;
+        max-width: 100%;
     }
 
-    .game-status {
-        grid-column: 1;
+    #grid-scale-input {
+        width: clamp(72px, 24vw, 120px);
     }
+
 }

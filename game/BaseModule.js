@@ -9,6 +9,7 @@ export class BaseModule {
         this.gameDescription = '';
         this.isRunning = false;
         this.usesStartStop = true;
+        this.gridScale = null;
         this._domBindings = [];
         this._eventNamespace = `.quadGame${++BaseModule.instanceCounter}`;
     }
@@ -39,6 +40,48 @@ export class BaseModule {
         this.isRunning = false;
         this.setStatus(message, tone);
         this.controls?.syncControls();
+    }
+
+    applyGridScale(value = this.gridScale?.value ?? this.gridScale?.defaultTileSize) {
+        if (!this.gridScale || !this.gridManager) return null;
+
+        const config = this.gridScale;
+        const min = Math.max(6, Number(config.min) || 6);
+        const max = Math.max(min, Number(config.max) || min);
+        const requested = Number(value);
+        const tileSize = Math.max(min, Math.min(max,
+            Number.isFinite(requested) ? requested : Number(config.defaultTileSize) || min
+        ));
+        const previousTileSize = this.gridManager.tileSize;
+        const previousGap = this.gridManager.gap;
+        const previousTotalSize = this.gridManager.totalSize;
+        const anchor = this.gridManager.getViewportAnchor?.() ?? null;
+        const defaultTileSize = Math.max(1, Number(config.defaultTileSize) || tileSize);
+        const defaultGap = Math.max(0, Number(config.defaultGap) || 0);
+        const gap = Math.max(0, Math.round(defaultGap * tileSize / defaultTileSize));
+
+        config.value = tileSize;
+        if (this.gridManager.setGridMetrics) {
+            this.gridManager.setGridMetrics(tileSize, gap);
+        } else {
+            this.gridManager.tileSize = tileSize;
+            this.gridManager.gap = gap;
+            this.gridManager.totalSize = tileSize + gap;
+        }
+
+        return {
+            anchor,
+            previousTileSize,
+            previousGap,
+            previousTotalSize,
+            tileSize: this.gridManager.tileSize,
+            gap: this.gridManager.gap,
+            totalSize: this.gridManager.totalSize,
+        };
+    }
+
+    onGridScaleChange() {
+        this.onResize();
     }
 
     bindDom(target, eventName, handler, options) {

@@ -33,6 +33,16 @@ class FakeLayer extends FakeNode {
     batchDraw() {}
 }
 
+const viewport = {
+    clientWidth: 300,
+    clientHeight: 180,
+};
+
+globalThis.document = {
+    getElementById(id) {
+        return id === 'container' ? viewport : null;
+    },
+};
 globalThis.window = {
     innerWidth: 320,
     innerHeight: 240,
@@ -48,6 +58,22 @@ globalThis.Konva = {
 };
 
 const { GridManager } = await import('../src/GridManager.js');
+
+test('GridManager sizes the scene to the unobstructed container viewport', () => {
+    const manager = new GridManager(null);
+
+    assert.equal(manager.stage.width(), viewport.clientWidth);
+    assert.equal(manager.stage.height(), viewport.clientHeight);
+    assert.equal(manager.stage.y(), 0, 'the viewport must not shift the game coordinate system');
+
+    viewport.clientWidth = 280;
+    viewport.clientHeight = 150;
+    manager.handleResize();
+
+    assert.equal(manager.stage.width(), 280);
+    assert.equal(manager.stage.height(), 150);
+    assert.equal(manager.stage.y(), 0);
+});
 
 test('GridManager renders text inside a normal grid cell', () => {
     const manager = new GridManager(null);

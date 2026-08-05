@@ -43,11 +43,22 @@ export class Tetris extends BaseModule {
         this.currentPiece = null;
         this.board = [];
         this.gameOver = false;
+        this.gridScale = {
+            min: 8,
+            max: 18,
+            step: 1,
+            defaultTileSize: 12,
+            defaultGap: 4,
+            value: 12,
+            fitColumns: 29,
+            fitRows: 32,
+        };
     }
 
     setup() {
         this.pause();
         this.clearBindings();
+        this.applyGridScale();
         this.resetState();
         this.bindKeyboardEvents();
         this.render();

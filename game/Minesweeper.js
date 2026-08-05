@@ -22,14 +22,20 @@ export class Minesweeper extends BaseModule {
         this.gameOver = false;
         this.explodedCell = null;
         this.resultMessage = '';
+        this.gridScale = {
+            min: 18,
+            max: 48,
+            step: 2,
+            defaultTileSize: 30,
+            defaultGap: 4,
+            value: 30,
+            fitColumns: 12,
+            fitRows: 14,
+        };
     }
 
     setup() {
-        this.gridManager.setGridMetrics?.(30, this.gridManager.gap);
-        if (!this.gridManager.setGridMetrics) {
-            this.gridManager.tileSize = 30;
-            this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
-        }
+        this.applyGridScale();
         this.bindMouseEvents();
         this.reset();
     }
