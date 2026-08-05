@@ -1,61 +1,100 @@
-// Файл: ./game/BaseModule.js
+// Общий жизненный цикл для всех игр QUAD.
 export class BaseModule {
-    // NAME -----------------------------------------------
-    #name = 'Название игры..'; // Приватное поле
+    static instanceCounter = 0;
 
-    // Геттер для чтения приватного поля
+    #name = 'Новая игра';
+
+    constructor() {
+        this.gameIcon = '🎮';
+        this.gameDescription = '';
+        this.isRunning = false;
+        this.usesStartStop = true;
+        this._domBindings = [];
+        this._eventNamespace = `.quadGame${++BaseModule.instanceCounter}`;
+    }
+
     get name() {
         return this.#name;
     }
 
-    // Сеттер для изменения приватного поля (доступен в наследуемом классе)
     set name(value) {
         this.#name = value;
     }
 
-    //-----------------------------------------------
+    get controls() {
+        return this.gridManager?.controls ?? null;
+    }
+
+    setRunning(value) {
+        this.isRunning = Boolean(value);
+        this.controls?.syncControls();
+    }
+
+    setStatus(message = '', tone = 'info') {
+        this.controls?.setStatus(message, tone);
+    }
+
+    finish(message, tone = 'result') {
+        this.pause();
+        this.isRunning = false;
+        this.setStatus(message, tone);
+        this.controls?.syncControls();
+    }
+
+    bindDom(target, eventName, handler, options) {
+        if (!target?.addEventListener) return;
+        target.addEventListener(eventName, handler, options);
+        this._domBindings.push(() => target.removeEventListener(eventName, handler, options));
+    }
+
+    bindStage(eventNames, handler) {
+        const stage = this.gridManager?.stage;
+        if (!stage?.on) return;
+
+        const namespacedEvents = eventNames
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((eventName) => eventName.includes('.') ? eventName : `${eventName}${this._eventNamespace}`)
+            .join(' ');
+
+        stage.on(namespacedEvents, handler);
+    }
+
+    clearBindings() {
+        this._domBindings.splice(0).forEach((remove) => remove());
+        this.gridManager?.stage?.off?.(this._eventNamespace);
+    }
+
+    destroy() {
+        this.pause();
+        this.clearBindings();
+    }
+
+    setup() {}
 
     start() {
-        throw new Error('Метод start должен быть реализован');
+        this.setRunning(true);
     }
 
     pause() {
-        throw new Error('Метод pause должен быть реализован');
+        this.setRunning(false);
     }
 
-    clear() {
-        throw new Error('Метод clear должен быть реализован');
-    }
+    clear() {}
 
-    update() {
-        throw new Error('Метод update должен быть реализован');
-    }
+    update() {}
 
-    toggleCell(x, y) {
-        throw new Error('Метод toggleCell должен быть реализован');
-    }
+    onResize() {}
 
-    handleLeftClick(x, y) {
-        throw new Error('Метод handleLeftClick должен быть реализован');
-    }
+    toggleCell() {}
 
-    handleRightClick(x, y) {
-        throw new Error('Метод handleRightClick должен быть реализован');
-    }
+    handleLeftClick() {}
 
-    bindMouseEvents(gridManager) {
-        throw new Error('Метод bindMouseEvents должен быть реализован');
-    }
+    handleRightClick() {}
 
-    showContextMenu(x, y) {
-        throw new Error('Метод showContextMenu должен быть реализован');
-    }
-
-    setup() {
-        throw new Error('Метод setup должен быть реализован');
-    }
+    showContextMenu() {}
 
     log(message) {
-        console.log(`[${this.name}] ${message}`);
+        console.info(`[${this.name}] ${message}`);
     }
 }

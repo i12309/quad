@@ -5,216 +5,294 @@ export class Galaga extends BaseModule {
     constructor(gridManager) {
         super();
         this.gameIcon = '🚀';
-        this.gameDescription = 'Классическая аркадная игра. Уничтожайте вражеские корабли и выживайте!';
+        this.gameDescription = 'Уничтожайте вражескую эскадрилью и не дайте ей добраться до вас.';
         this.name = 'Galaga';
+        this.usesStartStop = true;
         this.gridManager = gridManager;
+
         this.isRunning = false;
         this.interval = null;
-        this.speed = 100;
+        this.baseSpeed = 100;
+        this.speed = this.baseSpeed;
         this.score = 0;
         this.level = 1;
         this.player = { x: 0, y: 0, width: 3, alive: true };
         this.enemies = [];
         this.bullets = [];
         this.enemyBullets = [];
-        this.wavePatterns = [
-            [1, 0, 50],   // Более плавное движение вправо
-            [-1, 0, 50],  // Более плавное движение влево
-            [0, 1, 15]    // Опускание вниз
-        ];
+        this.patternIndex = 0;
+        this.patternTick = 0;
+        this.wavePatterns = [];
+        this.fieldWidth = 0;
+        this.fieldHeight = 0;
+        this.lastShotAt = 0;
+        this.shotCooldown = 180;
+        this.gameOver = false;
     }
 
     setup() {
-        this.clear();
-        this.spawnPlayer();
-        this.spawnEnemyWave();
+        this.pause();
+        this.clearBindings();
+        this.resetState();
         this.bindMouseEvents();
         this.bindKeyboardEvents();
-        this.gridManager.updateVisibleTiles();
+        this.render();
+        this.setStatus('Мышь — движение, пробел — огонь.');
+    }
+
+    resetState() {
+        this.fieldWidth = Math.max(20, Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize));
+        this.fieldHeight = Math.max(20, Math.floor(this.gridManager.stage.height() / this.gridManager.totalSize));
+        this.score = 0;
+        this.level = 1;
+        this.speed = this.baseSpeed;
+        this.player.alive = true;
+        this.player.x = Math.floor(this.fieldWidth / 2);
+        this.player.y = this.fieldHeight - 4;
+        this.enemies = [];
+        this.bullets = [];
+        this.enemyBullets = [];
+        this.patternIndex = 0;
+        this.patternTick = 0;
+        this.lastShotAt = 0;
+        this.gameOver = false;
+        this.spawnEnemyWave();
     }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), this.speed);
+        if (this.isRunning) return;
+        if (this.gameOver) {
+            this.resetState();
+            this.render();
         }
+        this.setRunning(true);
+        this.restartInterval();
+        this.setStatus(`Уровень ${this.level}.`);
+    }
+
+    restartInterval() {
+        if (this.interval !== null) clearInterval(this.interval);
+        this.interval = setInterval(() => this.update(), this.speed);
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
-            clearInterval(this.interval);
-        }
+        if (this.interval !== null) clearInterval(this.interval);
+        this.interval = null;
+        this.setRunning(false);
     }
 
     clear() {
         this.pause();
-        this.score = 0;
-        this.level = 1;
-        this.player.alive = true;
-        this.enemies = [];
-        this.bullets = [];
-        this.enemyBullets = [];
-        this.gridManager.selectedTiles = {};
+        this.resetState();
+        this.render();
+        this.setStatus('Новая эскадрилья готова.');
     }
 
     update() {
-        if (!this.player.alive) return;
+        if (!this.isRunning || this.gameOver) return;
 
         this.moveEnemies();
+        if (this.gameOver) return;
         this.moveBullets();
         this.moveEnemyBullets();
         this.checkCollisions();
-        this.checkEnemyFire();
+        if (this.gameOver) return;
         this.checkWaveCompletion();
-        this.updateGrid();
-    }
-
-    spawnPlayer() {
-        const stageWidth = Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize);
-        this.player.x = Math.floor(stageWidth / 2);
-        this.player.y = Math.floor(this.gridManager.stage.height() / this.gridManager.totalSize) - 5;
+        this.checkEnemyFire();
+        this.render();
     }
 
     spawnEnemyWave() {
-        const cols = 8;
-        const startX = this.player.x - Math.floor(cols / 2) * 4;
-        for (let i = 0; i < cols; i++) {
-            this.enemies.push({
-                x: startX + i * 4,
-                y: 5,
-                patternStep: 0,
-                health: 1
-            });
+        const cols = Math.min(8, Math.max(4, Math.floor((this.fieldWidth - 4) / 4)));
+        const formationWidth = (cols - 1) * 4 + 2;
+        const startX = Math.max(1, Math.floor((this.fieldWidth - formationWidth) / 2));
+        const rows = this.level >= 4 ? 2 : 1;
+
+        for (let row = 0; row < rows; row++) {
+            for (let column = 0; column < cols; column++) {
+                this.enemies.push({
+                    x: startX + column * 4,
+                    y: 4 + row * 4
+                });
+            }
         }
+
+        const horizontalSteps = Math.max(1, Math.min(18, Math.floor((this.fieldWidth - formationWidth) / 2)));
+        this.wavePatterns = [
+            { dx: 1, dy: 0, steps: horizontalSteps },
+            { dx: -1, dy: 0, steps: horizontalSteps },
+            { dx: 0, dy: 1, steps: Math.min(3 + Math.floor(this.level / 3), 6) }
+        ];
+        this.patternIndex = 0;
+        this.patternTick = 0;
     }
 
     moveEnemies() {
-        this.enemies.forEach(enemy => {
-            const pattern = this.wavePatterns[enemy.patternStep % this.wavePatterns.length];
-            enemy.x += pattern[0];
-            enemy.y += pattern[1];
-            if (++enemy.patternStep >= pattern[2]) enemy.patternStep = 0;
-        });
+        if (this.enemies.length === 0) return;
+        const pattern = this.wavePatterns[this.patternIndex];
+        const wouldLeaveField = this.enemies.some(enemy =>
+            enemy.x + pattern.dx < 0 || enemy.x + 1 + pattern.dx >= this.fieldWidth
+        );
+
+        if (!wouldLeaveField) {
+            for (const enemy of this.enemies) {
+                enemy.x += pattern.dx;
+                enemy.y += pattern.dy;
+            }
+            this.patternTick += 1;
+        } else {
+            this.patternTick = pattern.steps;
+        }
+
+        if (this.patternTick >= pattern.steps) {
+            this.patternTick = 0;
+            this.patternIndex = (this.patternIndex + 1) % this.wavePatterns.length;
+        }
+
+        if (this.enemies.some(enemy => enemy.y + 1 >= this.player.y)) {
+            this.endGame('Вражеская эскадрилья прорвалась.');
+        }
     }
 
     moveBullets() {
-        this.bullets = this.bullets.filter(bullet => {
-            bullet.y -= 1;
-            return bullet.y > 0;
-        });
+        this.bullets = this.bullets
+            .map(bullet => ({ ...bullet, y: bullet.y - 1 }))
+            .filter(bullet => bullet.y >= 0);
     }
 
     moveEnemyBullets() {
-        this.enemyBullets = this.enemyBullets.filter(bullet => {
-            bullet.y += 1;
-            return bullet.y < this.gridManager.stage.height() / this.gridManager.totalSize;
-        });
+        this.enemyBullets = this.enemyBullets
+            .map(bullet => ({ ...bullet, y: bullet.y + 1 }))
+            .filter(bullet => bullet.y < this.fieldHeight);
     }
 
     checkCollisions() {
-        // Проверка попаданий игрока во врагов
-        // Обновленная проверка коллизий для врагов 2x2
-        this.bullets.forEach((bullet, idx) => {
-            this.enemies.forEach((enemy, eIdx) => {
-                const isHitX = bullet.x >= enemy.x && bullet.x <= enemy.x + 1;
-                const isHitY = bullet.y >= enemy.y && bullet.y <= enemy.y + 1;
-                
-                if (isHitX && isHitY) {
-                    this.score += 100;
-                    this.enemies.splice(eIdx, 1);
-                    this.bullets.splice(idx, 1);
-                }
-            });
-        });
+        for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex--) {
+            const bullet = this.bullets[bulletIndex];
+            const enemyIndex = this.enemies.findIndex(enemy =>
+                bullet.x >= enemy.x && bullet.x <= enemy.x + 1 &&
+                bullet.y >= enemy.y && bullet.y <= enemy.y + 1
+            );
+            if (enemyIndex === -1) continue;
+            this.enemies.splice(enemyIndex, 1);
+            this.bullets.splice(bulletIndex, 1);
+            this.score += 100;
+        }
 
-        // Проверка попаданий вражеских пуль в игрока
-        this.enemyBullets.forEach(bullet => {
-            if (Math.abs(bullet.x - this.player.x) < this.player.width && 
-                Math.abs(bullet.y - this.player.y) < 1) {
-                this.player.alive = false;
-                this.pause();
-                alert(`Игра окончена! Счёт: ${this.score}`);
-            }
-        });
+        const playerWasHit = this.enemyBullets.some(bullet =>
+            bullet.y === this.player.y && Math.abs(bullet.x - this.player.x) <= 1
+        );
+        if (playerWasHit) this.endGame('Корабль подбит.');
     }
 
     checkEnemyFire() {
-        if (Math.random() < 0.02) {
-            const shooter = this.enemies[Math.floor(Math.random() * this.enemies.length)];
-            this.enemyBullets.push({ x: shooter.x, y: shooter.y + 1 });
-        }
+        if (this.enemies.length === 0 || Math.random() >= Math.min(0.012 + this.level * 0.002, 0.04)) return;
+        const shooter = this.enemies[Math.floor(Math.random() * this.enemies.length)];
+        this.enemyBullets.push({ x: shooter.x + 1, y: shooter.y + 2 });
     }
 
     checkWaveCompletion() {
-        if (this.enemies.length === 0) {
-            this.level++;
-            this.speed = Math.max(50, this.speed - 10);
-            this.spawnEnemyWave();
-        }
+        if (this.enemies.length !== 0) return;
+        this.level += 1;
+        this.speed = Math.max(45, this.baseSpeed - (this.level - 1) * 8);
+        this.enemyBullets = [];
+        this.spawnEnemyWave();
+        if (this.isRunning) this.restartInterval();
+        this.setStatus(`Уровень ${this.level}. Скорость выше!`, 'result');
     }
 
-    updateGrid() {
-        this.gridManager.selectedTiles = {};
+    shoot() {
+        if (!this.isRunning || this.gameOver || !this.player.alive) return;
+        const now = performance.now();
+        if (now - this.lastShotAt < this.shotCooldown) return;
+        this.lastShotAt = now;
+        this.bullets.push({ x: this.player.x, y: this.player.y - 1 });
+    }
 
-        // Отрисовка счета
-        const scoreKey = `score_${Date.now()}`;
-        this.gridManager.selectedTiles[scoreKey] = {
+    endGame(reason) {
+        if (this.gameOver) return;
+        this.gameOver = true;
+        this.player.alive = false;
+        this.pause();
+        this.render();
+        this.finish(`${reason} Счёт: ${this.score}. Уровень: ${this.level}.`);
+    }
+
+    render() {
+        const tiles = {};
+        tiles['1,1'] = {
             type: 'text',
-            text: `Score: ${this.score}`,
-            color: '#FFFFFF',
-            x: 2,
-            y: 1
+            text: `Счёт: ${this.score}   Уровень: ${this.level}`,
+            color: '#FFFFFF'
         };
 
-        // Отрисовка игрока
-        for (let i = -1; i <= 1; i++) {
-            const key = `${this.player.x + i},${this.player.y}`;
-            this.gridManager.selectedTiles[key] = { type: 'player', color: '#00FF00' };
+        if (this.player.alive) {
+            for (let dx = -1; dx <= 1; dx++) {
+                tiles[`${this.player.x + dx},${this.player.y}`] = { type: 'player', color: '#39D353' };
+            }
+            tiles[`${this.player.x},${this.player.y - 1}`] = { type: 'player', color: '#62E37B' };
         }
 
-        // Отрисовка врагов 2x2
-        this.enemies.forEach(enemy => {
+        for (const enemy of this.enemies) {
             for (let dx = 0; dx < 2; dx++) {
                 for (let dy = 0; dy < 2; dy++) {
-                    const key = `${enemy.x + dx},${enemy.y + dy}`;
-                    this.gridManager.selectedTiles[key] = { type: 'enemy', color: '#FF0000' };
+                    tiles[`${enemy.x + dx},${enemy.y + dy}`] = { type: 'enemy', color: '#FF5D73' };
                 }
             }
-        });
+        }
+        for (const bullet of this.bullets) {
+            tiles[`${bullet.x},${bullet.y}`] = { type: 'bullet', color: '#FFD93D' };
+        }
+        for (const bullet of this.enemyBullets) {
+            tiles[`${bullet.x},${bullet.y}`] = { type: 'enemyBullet', color: '#FF8C42' };
+        }
 
-        // Отрисовка пуль (без изменений)
-        this.bullets.forEach(bullet => {
-            const key = `${bullet.x},${bullet.y}`;
-            this.gridManager.selectedTiles[key] = { type: 'bullet', color: '#FFFF00' };
-        });
-
-        this.enemyBullets.forEach(bullet => {
-            const key = `${bullet.x},${bullet.y}`;
-            this.gridManager.selectedTiles[key] = { type: 'enemyBullet', color: '#FF4500' };
-        });
-
+        this.gridManager.selectedTiles = tiles;
         this.gridManager.updateVisibleTiles();
     }
 
     bindMouseEvents() {
-        this.gridManager.stage.on('mousemove', (event) => {
-            const pos = this.gridManager.stage.getPointerPosition();
-            if (!pos || !this.player.alive) return;
-            this.player.x = Math.floor(pos.x / this.gridManager.totalSize);
-        });
+        const handler = () => {
+            if (!this.isRunning || this.gameOver || !this.player.alive) return;
+            const position = this.gridManager.stage.getPointerPosition();
+            if (!position) return;
+            const x = Math.floor((position.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
+            this.player.x = Math.max(1, Math.min(this.fieldWidth - 2, x));
+        };
+        this.bindStageEvent('mousemove', handler);
     }
 
     bindKeyboardEvents() {
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && this.player.alive) {
-                this.bullets.push({ x: this.player.x, y: this.player.y - 1 });
-            }
+        this.bindDom(document, 'keydown', event => {
+            if (event.code !== 'Space') return;
+            event.preventDefault();
+            if (!event.repeat) this.shoot();
         });
     }
 
-    handleLeftClick(x, y) {}
-    handleRightClick(x, y) {}
-    toggleCell(x, y) {}
-    showContextMenu(x, y) {}
+    bindStageEvent(eventName, handler) {
+        if (this.bindStage.length >= 3) {
+            this.bindStage(this.gridManager.stage, eventName, handler);
+        } else {
+            this.bindStage(eventName, handler);
+        }
+    }
+
+    onResize() {
+        this.fieldWidth = Math.max(20, Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize));
+        this.fieldHeight = Math.max(20, Math.floor(this.gridManager.stage.height() / this.gridManager.totalSize));
+        this.player.x = Math.max(1, Math.min(this.fieldWidth - 2, this.player.x));
+        this.player.y = this.fieldHeight - 4;
+        this.render();
+    }
+
+    destroy() {
+        this.pause();
+        super.destroy();
+    }
+
+    handleLeftClick() {}
+    handleRightClick() {}
+    toggleCell() {}
+    showContextMenu() {}
 }

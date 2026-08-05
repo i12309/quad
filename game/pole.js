@@ -4,77 +4,130 @@ import { BaseModule } from './BaseModule.js';
 export class pole extends BaseModule {
     constructor(gridManager) {
         super();
-        this.gameIcon = '';
-        this.gameDescription = 'Рандом!';
-        this.name = 'RANDOM';
+        this.gameIcon = '🌌';
+        this.gameDescription = 'Спокойная анимация из больших зелёных пикселей.';
+        this.name = 'Живое поле';
+        this.usesStartStop = true;
         this.gridManager = gridManager;
+
         this.isRunning = false;
         this.interval = null;
-        this.speed = 200; // Скорость игры (меньше = быстрее)
-        this.score = 0;
+        this.speed = 180;
         this.fieldWidth = 0;
         this.fieldHeight = 0;
         this.offsetX = 0;
         this.offsetY = 0;
-
-        // Палитра цветов в HEX
+        this.cells = [];
         this.colors = [
-            '#39D353', // rgb(57, 211, 83)
-            '#26A641', // rgb(38, 166, 65)
-            '#006D32', // rgb(0, 109, 50)
-            '#0E4429', // rgb(14, 68, 41)
-            '#2D333B'  // rgb(45, 51, 59)
+            '#39D353',
+            '#26A641',
+            '#006D32',
+            '#0E4429',
+            '#2D333B'
         ];
     }
 
     setup() {
-        this.clear();
-        this.draw();
+        this.pause();
+        this.clearBindings();
+        this.resetField();
+        this.render();
+        this.setStatus('Нажмите «Старт», чтобы оживить поле.');
+    }
+
+    calculateBounds() {
+        const visibleWidth = Math.max(1, Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize));
+        const visibleHeight = Math.max(1, Math.floor(this.gridManager.stage.height() / this.gridManager.totalSize));
+        this.fieldWidth = Math.max(1, Math.floor(visibleWidth * 0.82));
+        this.fieldHeight = Math.max(1, Math.floor(visibleHeight * 0.30));
+        this.offsetX = Math.max(0, Math.floor((visibleWidth - this.fieldWidth) / 2));
+        this.offsetY = Math.max(0, Math.floor((visibleHeight - this.fieldHeight) / 2));
+    }
+
+    resetField() {
+        this.calculateBounds();
+        this.cells = Array.from(
+            { length: this.fieldHeight },
+            () => Array.from({ length: this.fieldWidth }, () => this.randomColorIndex())
+        );
+    }
+
+    randomColorIndex() {
+        // Тёмные клетки встречаются чаще, яркие служат акцентами.
+        const value = Math.random();
+        if (value < 0.08) return 0;
+        if (value < 0.20) return 1;
+        if (value < 0.38) return 2;
+        if (value < 0.62) return 3;
+        return 4;
     }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), this.speed);
-        }
+        if (this.isRunning) return;
+        this.setRunning(true);
+        this.interval = setInterval(() => this.update(), this.speed);
+        this.setStatus('Анимация идёт.');
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
-            clearInterval(this.interval);
-        }
+        if (this.interval !== null) clearInterval(this.interval);
+        this.interval = null;
+        this.setRunning(false);
     }
 
     clear() {
         this.pause();
-        this.gridManager.selectedTiles = {};
-        this.draw();
-        this.gridManager.updateVisibleTiles();
+        this.resetField();
+        this.render();
+        this.setStatus('Поле обновлено.');
     }
 
     update() {
-        this.gridManager.selectedTiles = {};
-        this.draw();
+        if (!this.isRunning) return;
+        const changes = Math.max(1, Math.floor(this.fieldWidth * this.fieldHeight * 0.08));
+        for (let i = 0; i < changes; i++) {
+            const x = Math.floor(Math.random() * this.fieldWidth);
+            const y = Math.floor(Math.random() * this.fieldHeight);
+            this.cells[y][x] = this.randomColorIndex();
+        }
+        this.render();
+    }
+
+    render() {
+        const tiles = {};
+        const titleY = Math.max(0, this.offsetY - 2);
+        tiles[`${this.offsetX},${titleY}`] = {
+            type: 'text',
+            text: 'ЖИВОЕ ПОЛЕ',
+            color: '#8B949E'
+        };
+
+        for (let y = 0; y < this.fieldHeight; y++) {
+            for (let x = 0; x < this.fieldWidth; x++) {
+                tiles[`${this.offsetX + x},${this.offsetY + y}`] = {
+                    type: 'cell',
+                    color: this.colors[this.cells[y][x]]
+                };
+            }
+        }
+
+        this.gridManager.selectedTiles = tiles;
         this.gridManager.updateVisibleTiles();
     }
 
-    draw() {
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        this.fieldWidth = visibleWidth; //Math.floor(visibleWidth * 0.9); // 90% ширины
-        this.fieldHeight = Math.floor(visibleHeight * 0.3); // 80% высоты
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
-
-        // Рисуем границы поля
-        for (let x = 1; x < this.fieldWidth + 1; x++) {
-            for (let y = 1; y < this.fieldHeight + 1; y++) {
-                const key = `${x},${y}`;
-                const _color = this.colors[Math.floor(Math.random() * this.colors.length)];
-                this.gridManager.selectedTiles[key] = { type: 'wall', color: _color };
-            }
-        }
+    onResize() {
+        this.resetField();
+        this.render();
     }
 
+    destroy() {
+        this.pause();
+        super.destroy();
+    }
+
+    bindMouseEvents() {}
+    toggleCell() {}
+    handleLeftClick() {}
+    handleRightClick() {}
+    showContextMenu() {}
 }

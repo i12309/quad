@@ -7,143 +7,174 @@ export class TicTacToe extends BaseModule {
         this.gameIcon = '❌⭕';
         this.gameDescription = 'Крестики-нолики. Соберите три в ряд!';
         this.name = 'TicTacToe';
+        this.usesStartStop = false;
         this.gridManager = gridManager;
         this.isRunning = false;
         this.fieldWidth = 3;
         this.fieldHeight = 3;
-        this.board = Array(3).fill().map(() => Array(3).fill(null));
+        this.board = [];
         this.currentPlayer = 'X';
         this.offsetX = 0;
         this.offsetY = 0;
+        this.gameOver = false;
+        this.winningCells = [];
+        this.resultMessage = '';
     }
 
-    // Реализация всех обязательных методов из BaseModule
+    setup() {
+        this.gridManager.setGridMetrics?.(72, this.gridManager.gap);
+        if (!this.gridManager.setGridMetrics) {
+            this.gridManager.tileSize = 72;
+            this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
+        }
+        this.bindMouseEvents();
+        this.reset();
+    }
+
+    reset() {
+        this.board = Array.from({ length: 3 }, () => Array(3).fill(null));
+        this.currentPlayer = 'X';
+        this.gameOver = false;
+        this.winningCells = [];
+        this.resultMessage = '';
+        this.isRunning = true;
+        this.calculateOffsets();
+        this.render();
+        this.setStatus('Ход игрока X', 'info');
+    }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.log('Игра началась!');
-        }
+        if (this.gameOver) this.reset();
+        this.isRunning = true;
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
-            this.log('Игра на паузе.');
-        }
+        this.isRunning = false;
     }
 
     clear() {
-        this.pause();
-        this.board = Array(3).fill().map(() => Array(3).fill(null)); // Очищаем поле
-        this.currentPlayer = 'X'; // Сбрасываем текущего игрока
-        this.gridManager.selectedTiles = {}; // Очищаем отрисованные клетки
-        this.drawBorder(); // Отрисовываем пустое поле
-        this.gridManager.updateVisibleTiles(); // Обновляем отображение
-        this.log('Игра очищена и готова к новому раунду.');
+        this.reset();
     }
 
     update() {
-        // В крестиках-ноликах нет непрерывного обновления, как в других играх
-        this.log('Обновление состояния игры.');
+        this.render();
     }
 
     toggleCell(x, y) {
-        if (this.board[y][x] === null) {
-            this.board[y][x] = this.currentPlayer;
-            this.drawBorder();
-            if (this.checkWin(this.currentPlayer)) {
-                alert(`Победил ${this.currentPlayer}!`);
-                this.clear();
-            } else if (this.board.flat().every(cell => cell !== null)) {
-                alert('Ничья!');
-                this.clear();
-            } else {
-                this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-            }
+        if (!this.isRunning || this.gameOver || this.board[y][x] !== null) return;
+
+        const player = this.currentPlayer;
+        this.board[y][x] = player;
+        const winningLine = this.getWinningLine(player);
+
+        if (winningLine) {
+            this.gameOver = true;
+            this.isRunning = false;
+            this.winningCells = winningLine;
+            this.resultMessage = `Победил игрок ${player}!`;
+            this.render();
+            this.finish(this.resultMessage, 'success');
+            return;
         }
+
+        if (this.board.flat().every((cell) => cell !== null)) {
+            this.gameOver = true;
+            this.isRunning = false;
+            this.resultMessage = 'Ничья!';
+            this.render();
+            this.finish(this.resultMessage, 'result');
+            return;
+        }
+
+        this.currentPlayer = player === 'X' ? 'O' : 'X';
+        this.render();
+        this.setStatus(`Ход игрока ${this.currentPlayer}`, 'info');
     }
 
     handleLeftClick(x, y) {
         this.toggleCell(x, y);
-        this.log(`Левый клик на клетке (${x}, ${y}).`);
     }
 
-    handleRightClick(x, y) {
-        // В крестиках-ноликах правый клик не используется
-        this.log(`Правый клик на клетке (${x}, ${y}).`);
-    }
+    handleRightClick() {}
 
     bindMouseEvents() {
-        this.gridManager.stage.off(); // Убираем старые обработчики
-        this.gridManager.stage.on('click', (event) => {
+        this.clearBindings();
+        this.bindStage('click', () => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
 
-            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
-            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
+            const x = Math.floor(
+                (pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize
+            ) - this.offsetX;
+            const y = Math.floor(
+                (pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize
+            ) - this.offsetY;
 
             if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
                 this.handleLeftClick(x, y);
             }
         });
-
-        this.gridManager.stage.on('contextmenu', (event) => {
-            event.evt.preventDefault(); // Отключаем стандартное меню
-            const pos = this.gridManager.stage.getPointerPosition();
-            if (!pos) return;
-
-            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
-            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
-
-            if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
-                this.handleRightClick(x, y);
-            }
-        });
-
-        this.log('События мыши привязаны.');
     }
 
-    showContextMenu(x, y) {
-        this.log(`Контекстное меню показано на клетке (${x}, ${y}).`);
-    }
-
-    setup() {
-        this.clear();
-        this.bindMouseEvents();
-        this.log('Игра настроена и готова к запуску.');
-    }
-
-    // Вспомогательные методы
-
-    drawBorder() {
+    calculateOffsets() {
         const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
         const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
         this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
         this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
+    }
 
+    render() {
+        this.gridManager.selectedTiles = {};
         for (let y = 0; y < this.fieldHeight; y++) {
             for (let x = 0; x < this.fieldWidth; x++) {
+                const value = this.board[y][x];
+                const isWinner = this.winningCells.some((cell) => cell.x === x && cell.y === y);
                 const key = `${this.offsetX + x},${this.offsetY + y}`;
                 this.gridManager.selectedTiles[key] = {
                     type: 'cell',
-                    text: this.board[y][x] || '',
-                    color: '#FFFFFF'
+                    text: value || '',
+                    textColor: value === 'X' ? '#FF5A5F' : '#4D96FF',
+                    color: isWinner ? '#2DA44E' : '#F0F3F6'
                 };
             }
         }
+
+        const hudY = Math.max(0, this.offsetY - 2);
+        this.gridManager.selectedTiles[`${Math.max(0, this.offsetX)},${hudY}`] = {
+            type: 'text',
+            text: this.resultMessage || `Ход: ${this.currentPlayer}`,
+            textColor: '#FFFFFF',
+            color: '#FFFFFF'
+        };
         this.gridManager.updateVisibleTiles();
     }
 
-    checkWin(player) {
-        // Проверка строк и столбцов
-        for (let i = 0; i < 3; i++) {
-            if (this.board[i][0] === player && this.board[i][1] === player && this.board[i][2] === player) return true;
-            if (this.board[0][i] === player && this.board[1][i] === player && this.board[2][i] === player) return true;
-        }
-        // Проверка диагоналей
-        if (this.board[0][0] === player && this.board[1][1] === player && this.board[2][2] === player) return true;
-        if (this.board[0][2] === player && this.board[1][1] === player && this.board[2][0] === player) return true;
-        return false;
+    drawBorder() {
+        this.render();
     }
+
+    getWinningLine(player) {
+        const lines = [
+            [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }],
+            [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }],
+            [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }],
+            [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }],
+            [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }],
+            [{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }],
+            [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }],
+            [{ x: 2, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 2 }]
+        ];
+        return lines.find((line) => line.every(({ x, y }) => this.board[y][x] === player)) || null;
+    }
+
+    checkWin(player) {
+        return this.getWinningLine(player) !== null;
+    }
+
+    onResize() {
+        this.calculateOffsets();
+        this.render();
+    }
+
+    showContextMenu() {}
 }

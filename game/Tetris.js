@@ -12,13 +12,13 @@ const SHAPES = {
 };
 
 const COLORS = {
-    I: '#00FFFF',
-    O: '#FFFF00',
-    T: '#FF00FF',
-    L: '#FFA500',
-    J: '#0000FF',
-    S: '#00FF00',
-    Z: '#FF0000'
+    I: '#00D9FF',
+    O: '#FFD93D',
+    T: '#C77DFF',
+    L: '#FF9F1C',
+    J: '#4D7CFE',
+    S: '#39D353',
+    Z: '#FF5D73'
 };
 
 export class Tetris extends BaseModule {
@@ -27,283 +27,268 @@ export class Tetris extends BaseModule {
         this.gameIcon = '🧊';
         this.gameDescription = 'Классический Тетрис. Собирайте линии и набирайте очки!';
         this.name = 'Tetris';
+        this.usesStartStop = true;
         this.gridManager = gridManager;
+
+        this.fieldWidth = 15;
+        this.fieldHeight = 30;
+        this.dropInterval = 700;
         this.isRunning = false;
         this.interval = null;
         this.score = 0;
-        this.fieldWidth = 15; // было 10
-        this.fieldHeight = 30; // было 20
-        this.tileScale = 1; // Множитель размера клетки
+        this.lines = 0;
         this.offsetX = 0;
         this.offsetY = 0;
         this.nextPiece = null;
         this.currentPiece = null;
         this.board = [];
-        this.initBoard();
-    }
-
-    initBoard() {
-        this.board = Array(this.fieldHeight).fill().map(() => 
-            Array(this.fieldWidth).fill(0)
-        );
+        this.gameOver = false;
     }
 
     setup() {
-        this.initBoard();
-        // Настраиваем размеры в GridManager перед инициализацией
-        this.gridManager.tileSize = this.gridManager.tileSize * this.tileScale;
-        this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
-
-        // Центрируем камеру на середине поля
-        this.gridManager.stage.x(-this.offsetX * this.gridManager.totalSize);
-        this.gridManager.stage.y(-this.offsetY * this.gridManager.totalSize);
-
-        this.clear();
-        this.generateNewPiece();
-        this.drawBorder();
-        this.drawScore();
-        this.bindKeyboardEvents();
-        this.start();
-    }
-
-    start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), 1000);
-        }
-    }
-
-    pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
-            clearInterval(this.interval);
-        }
-    }
-
-    clear() {
         this.pause();
-        this.score = 0;
-        this.initBoard();
-        this.gridManager.selectedTiles = {};
-        this.gridManager.updateVisibleTiles();
+        this.clearBindings();
+        this.resetState();
+        this.bindKeyboardEvents();
+        this.render();
+        this.setStatus('Стрелки — движение, пробел — быстрый сброс.');
     }
 
-    generateNewPiece() {
-        const shapes = Object.keys(SHAPES);
-        const nextType = shapes[Math.floor(Math.random() * shapes.length)];
-        
-        this.currentPiece = this.nextPiece || {
-            type: nextType,
-            shape: SHAPES[nextType],
-            x: Math.floor(this.fieldWidth / 2) - 1,
-            y: 0
-        };
-        
-        this.nextPiece = {
-            type: shapes[Math.floor(Math.random() * shapes.length)],
-            shape: SHAPES[nextType],
+    resetState() {
+        this.score = 0;
+        this.lines = 0;
+        this.gameOver = false;
+        this.board = Array.from(
+            { length: this.fieldHeight },
+            () => Array(this.fieldWidth).fill(null)
+        );
+        this.currentPiece = null;
+        this.nextPiece = this.createRandomPiece();
+        this.spawnNextPiece();
+        this.calculateOffset();
+    }
+
+    calculateOffset() {
+        const visibleWidth = Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.floor(this.gridManager.stage.height() / this.gridManager.totalSize);
+        this.offsetX = Math.max(1, Math.floor((visibleWidth - this.fieldWidth) / 2));
+        this.offsetY = Math.max(1, Math.floor((visibleHeight - this.fieldHeight) / 2));
+    }
+
+    createRandomPiece() {
+        const types = Object.keys(SHAPES);
+        const type = types[Math.floor(Math.random() * types.length)];
+        return {
+            type,
+            shape: SHAPES[type].map(row => [...row]),
             x: 0,
             y: 0
         };
     }
 
-    drawBorder() {
-        // Адаптируем расчет смещений с учетом масштаба
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight * 0.8) / 2); // Добавляем вертикальный отступ
+    spawnNextPiece() {
+        this.currentPiece = this.nextPiece || this.createRandomPiece();
+        this.currentPiece.x = Math.floor((this.fieldWidth - this.currentPiece.shape[0].length) / 2);
+        this.currentPiece.y = 0;
+        this.nextPiece = this.createRandomPiece();
+    }
 
-        // Рисуем только видимую часть поля
-        const startY = Math.max(0, Math.floor(-this.gridManager.stage.y() / this.gridManager.totalSize));
-        const endY = Math.min(this.fieldHeight, startY + Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize));
-
-        for (let y = startY; y < endY; y++) {
-            for (let x = 0; x < this.fieldWidth; x++) {
-                const key = `${this.offsetX + x},${this.offsetY + y}`;
-                this.gridManager.selectedTiles[key] = { 
-                    type: 'cell', 
-                    color: this.board[y][x] || '#1A1A1A',
-                    width: this.tileScale,
-                    height: this.tileScale
-                };
-            }
+    start() {
+        if (this.isRunning) return;
+        if (this.gameOver) {
+            this.resetState();
+            this.render();
         }
+        this.setRunning(true);
+        this.interval = setInterval(() => this.update(), this.dropInterval);
+        this.setStatus('Игра идёт.');
     }
 
-    drawNextPiece() {
-        const previewOffsetX = this.offsetX + this.fieldWidth + 2 * this.tileScale;
-        const previewOffsetY = this.offsetY;
-
-        // Очищаем область превью
-        for (let x = 0; x < 4; x++) {
-            for (let y = 0; y < 4; y++) {
-                const key = `${previewOffsetX + x},${previewOffsetY + y}`;
-                delete this.gridManager.selectedTiles[key];
-            }
-        }
-
-        // Рисуем следующую фигуру
-        this.nextPiece.shape.forEach((row, y) => {
-            row.forEach((cell, x) => {
-                if (cell) {
-                    const key = `${previewOffsetX + x},${previewOffsetY + y}`;
-                    this.gridManager.selectedTiles[key] = {
-                        type: 'next',
-                        color: COLORS[this.nextPiece.type]
-                    };
-                }
-            });
-        });
+    pause() {
+        if (this.interval !== null) clearInterval(this.interval);
+        this.interval = null;
+        this.setRunning(false);
     }
 
-    drawScore() {
-        const scoreX = this.offsetX + this.fieldWidth + 2 * this.tileScale;
-        const scoreY = this.offsetY + 6;
-        const key = `${scoreX},${scoreY}`;
-        this.gridManager.selectedTiles[key] = {
-            type: 'text',
-            text: `Score: ${this.score}`,
-            color: '#FFFFFF'
-        };
+    clear() {
+        this.pause();
+        this.resetState();
+        this.render();
+        this.setStatus('Новая игра готова.');
     }
 
-    bindKeyboardEvents() {
-        document.addEventListener('keydown', (e) => {
-            if (!this.isRunning) return;
-
-            switch(e.key) {
-                case 'ArrowLeft':
-                    this.movePiece(-1, 0);
-                    break;
-                case 'ArrowRight':
-                    this.movePiece(1, 0);
-                    break;
-                case 'ArrowDown':
-                    this.movePiece(0, 1);
-                    break;
-                case 'ArrowUp':
-                    this.rotatePiece();
-                    break;
-            }
-        });
+    update() {
+        if (!this.isRunning || this.gameOver) return;
+        this.movePiece(0, 1);
     }
 
     movePiece(dx, dy) {
         if (this.canMove(this.currentPiece, dx, dy)) {
             this.currentPiece.x += dx;
             this.currentPiece.y += dy;
-            this.updateDisplay();
-        } else if (dy === 1) {
-            this.lockPiece();
+            this.render();
+            return true;
         }
+        if (dy > 0) this.lockPiece();
+        return false;
     }
 
     rotatePiece() {
-        const rotated = this.currentPiece.shape[0].map((_, i) =>
-            this.currentPiece.shape.map(row => row[i]).reverse()
+        const rotated = this.currentPiece.shape[0].map((_, column) =>
+            this.currentPiece.shape.map(row => row[column]).reverse()
         );
-        
-        if (this.canMove({ ...this.currentPiece, shape: rotated }, 0, 0)) {
-            this.currentPiece.shape = rotated;
-            this.updateDisplay();
+
+        // Небольшой wall-kick позволяет поворачивать фигуры у стен.
+        for (const kick of [0, -1, 1, -2, 2]) {
+            const candidate = { ...this.currentPiece, shape: rotated };
+            if (this.canMove(candidate, kick, 0)) {
+                this.currentPiece.shape = rotated;
+                this.currentPiece.x += kick;
+                this.render();
+                return;
+            }
         }
+    }
+
+    hardDrop() {
+        while (this.canMove(this.currentPiece, 0, 1)) this.currentPiece.y += 1;
+        this.lockPiece();
     }
 
     canMove(piece, dx, dy) {
-        return piece.shape.every((row, y) =>
-            row.every((cell, x) => {
-                if (!cell) return true;
-                const newX = piece.x + x + dx;
-                const newY = piece.y + y + dy;
-                return (
-                    newX >= 0 &&
-                    newX < this.fieldWidth &&
-                    newY < this.fieldHeight &&
-                    !this.board[newY]?.[newX]
-                );
-            })
-        );
+        return piece.shape.every((row, y) => row.every((cell, x) => {
+            if (!cell) return true;
+            const newX = piece.x + x + dx;
+            const newY = piece.y + y + dy;
+            return newX >= 0 &&
+                newX < this.fieldWidth &&
+                newY >= 0 &&
+                newY < this.fieldHeight &&
+                !this.board[newY][newX];
+        }));
     }
 
     lockPiece() {
-        this.currentPiece.shape.forEach((row, y) => {
-            row.forEach((cell, x) => {
-                if (cell) {
-                    const boardY = this.currentPiece.y + y;
-                    const boardX = this.currentPiece.x + x;
-                    if (boardY >= 0) {
-                        this.board[boardY][boardX] = COLORS[this.currentPiece.type];
-                    }
-                }
-            });
-        });
-
-        this.clearLines();
-        this.generateNewPiece();
-        
-        if (!this.canMove(this.currentPiece, 0, 0)) {
-            this.pause();
-            alert(`Game Over! Score: ${this.score}`);
-            this.clear();
-        }
-    }
-
-    clearLines() {
-        let linesCleared = 0;
-        
-        for (let y = this.fieldHeight - 1; y >= 0; y--) {
-            if (this.board[y].every(cell => cell)) {
-                this.board.splice(y, 1);
-                this.board.unshift(Array(this.fieldWidth).fill(0));
-                linesCleared++;
-                y++;
+        for (let y = 0; y < this.currentPiece.shape.length; y++) {
+            for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                if (!this.currentPiece.shape[y][x]) continue;
+                const boardX = this.currentPiece.x + x;
+                const boardY = this.currentPiece.y + y;
+                this.board[boardY][boardX] = COLORS[this.currentPiece.type];
             }
         }
 
-        if (linesCleared > 0) {
-            this.score += linesCleared * 100;
-            this.updateDisplay();
+        this.clearLines();
+        this.spawnNextPiece();
+
+        if (!this.canMove(this.currentPiece, 0, 0)) {
+            this.gameOver = true;
+            this.pause();
+            this.render();
+            this.finish(`Игра окончена. Счёт: ${this.score}, линий: ${this.lines}.`);
+            return;
+        }
+
+        this.render();
+    }
+
+    clearLines() {
+        let cleared = 0;
+        for (let y = this.fieldHeight - 1; y >= 0; y--) {
+            if (!this.board[y].every(Boolean)) continue;
+            this.board.splice(y, 1);
+            this.board.unshift(Array(this.fieldWidth).fill(null));
+            cleared += 1;
+            y += 1;
+        }
+
+        if (cleared > 0) {
+            const lineScores = [0, 100, 300, 500, 800];
+            this.score += lineScores[cleared] || cleared * 250;
+            this.lines += cleared;
         }
     }
 
-    update() {
-        this.movePiece(0, 1);
-    }
+    render() {
+        this.calculateOffset();
+        const tiles = {};
 
-    updateDisplay() {
-        this.gridManager.selectedTiles = {};
-        this.drawBorder();
-        this.drawCurrentPiece();
-        this.drawNextPiece();
-        this.drawScore();
+        for (let y = 0; y < this.fieldHeight; y++) {
+            for (let x = 0; x < this.fieldWidth; x++) {
+                tiles[`${this.offsetX + x},${this.offsetY + y}`] = {
+                    type: 'cell',
+                    color: this.board[y][x] || '#151A22'
+                };
+            }
+        }
+
+        if (this.currentPiece) {
+            this.currentPiece.shape.forEach((row, y) => row.forEach((cell, x) => {
+                if (!cell) return;
+                const boardX = this.currentPiece.x + x;
+                const boardY = this.currentPiece.y + y;
+                if (boardY < 0) return;
+                tiles[`${this.offsetX + boardX},${this.offsetY + boardY}`] = {
+                    type: 'piece',
+                    color: COLORS[this.currentPiece.type]
+                };
+            }));
+        }
+
+        const hudX = this.offsetX + this.fieldWidth + 2;
+        tiles[`${hudX},${this.offsetY}`] = {
+            type: 'text',
+            text: 'СЛЕДУЮЩАЯ',
+            color: '#AEB7C6'
+        };
+        this.nextPiece.shape.forEach((row, y) => row.forEach((cell, x) => {
+            if (cell) {
+                tiles[`${hudX + x},${this.offsetY + 2 + y}`] = {
+                    type: 'next',
+                    color: COLORS[this.nextPiece.type]
+                };
+            }
+        }));
+        tiles[`${hudX},${this.offsetY + 7}`] = {
+            type: 'text',
+            text: `Счёт: ${this.score}`,
+            color: '#FFFFFF'
+        };
+        tiles[`${hudX},${this.offsetY + 9}`] = {
+            type: 'text',
+            text: `Линии: ${this.lines}`,
+            color: '#FFFFFF'
+        };
+
+        this.gridManager.selectedTiles = tiles;
         this.gridManager.updateVisibleTiles();
     }
 
-    drawCurrentPiece() {
-        this.currentPiece.shape.forEach((row, y) => {
-            row.forEach((cell, x) => {
-                if (cell) {
-                    const boardX = this.currentPiece.x + x;
-                    const boardY = this.currentPiece.y + y;
-                    if (boardY >= 0) {
-                        const key = `${this.offsetX + boardX},${this.offsetY + boardY}`;
-                        this.gridManager.selectedTiles[key] = {
-                            type: 'piece',
-                            color: COLORS[this.currentPiece.type]
-                        };
-                    }
-                }
-            });
+    bindKeyboardEvents() {
+        this.bindDom(document, 'keydown', (event) => {
+            if (!this.isRunning || this.gameOver) return;
+            if (!['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'Space'].includes(event.code)) return;
+            event.preventDefault();
+            if (event.code === 'ArrowLeft') this.movePiece(-1, 0);
+            if (event.code === 'ArrowRight') this.movePiece(1, 0);
+            if (event.code === 'ArrowDown') this.movePiece(0, 1);
+            if (event.code === 'ArrowUp') this.rotatePiece();
+            if (event.code === 'Space') this.hardDrop();
         });
     }
 
-    handleLeftClick(x, y) {
-        // Не используется в Тетрисе
+    onResize() {
+        this.render();
     }
 
-    handleRightClick(x, y) {
-        // Не используется в Тетрисе
+    destroy() {
+        this.pause();
+        super.destroy();
     }
+
+    toggleCell() {}
+    handleLeftClick() {}
+    handleRightClick() {}
+    bindMouseEvents() {}
+    showContextMenu() {}
 }

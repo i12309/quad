@@ -1,199 +1,263 @@
-// Файл: ./game/SimpleStrategy.js
 import { BaseModule } from './BaseModule.js';
 
 export class SimpleStrategy extends BaseModule {
     constructor(gridManager) {
         super();
+        this.name = 'Простая стратегия';
         this.gameIcon = '🏰';
-        this.gameDescription = 'Упрощенная стратегическая игра. Стройте базы, собирайте ресурсы и управляйте армией.';
-        this.name = 'SimpleStrategy';
+        this.gameDescription = 'Назначайте рабочих, добывайте ресурсы и улучшайте замок.';
         this.gridManager = gridManager;
-        this.isRunning = false;
+        this.usesStartStop = true;
         this.interval = null;
-        this.speed = 1000; // Обновление игры каждую секунду
-        this.resources = { wood: 0, gold: 0 };
-        this.units = [];
-        this.buildings = [];
-        this.mapWidth = 1000;
-        this.mapHeight = 1000;
-        this.visibleTiles = {}; // Только видимые тайлы
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.selectedUnit = null;
+        this.tickSpeed = 700;
+        this.width = 0;
+        this.height = 0;
+        this.resources = { wood: 15, gold: 5 };
+        this.workers = [];
+        this.castle = { x: 0, y: 0, level: 1 };
+        this.resourceNodes = new Map();
+        this.selectedWorker = null;
+        this.finished = false;
+        this.tickCount = 0;
+
+        this.onStageClick = this.onStageClick.bind(this);
+        this.onContextMenu = this.onContextMenu.bind(this);
+        this.tick = this.update.bind(this);
     }
 
     setup() {
-        this.clear();
-        this.generateMap();
-        this.bindMouseEvents();
-        this.gridManager.updateVisibleTiles();
+        this.gridManager.setGridMetrics?.(16, 2);
+        this.clearBindings();
+        this.bindStage('click', this.onStageClick);
+        this.bindStage('contextmenu', this.onContextMenu);
+        this.resetGame();
+    }
+
+    resetGame() {
+        this.pause();
+        const columns = Math.floor(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const rows = Math.floor(this.gridManager.stage.height() / this.gridManager.totalSize);
+        this.width = Math.max(16, Math.min(32, columns));
+        this.height = Math.max(12, Math.min(24, rows - 3));
+        this.gridManager.stage.x(Math.max(0, Math.floor(
+            (this.gridManager.stage.width() - this.width * this.gridManager.totalSize) / 2
+        )));
+        this.resources = { wood: 15, gold: 5 };
+        this.castle = { x: Math.floor(this.width / 2), y: Math.floor(this.height / 2) + 2, level: 1 };
+        this.workers = [
+            { id: 1, x: this.castle.x - 2, y: this.castle.y, task: null },
+            { id: 2, x: this.castle.x + 2, y: this.castle.y, task: null },
+        ];
+        this.resourceNodes = new Map();
+        this.selectedWorker = null;
+        this.finished = false;
+        this.tickCount = 0;
+        this.generateNodes();
+        this.render();
+        this.setStatus('Рабочий → дерево/рудник: назначить. Замок: улучшить. ПКМ по замку: нанять.', 'info');
+    }
+
+    generateNodes() {
+        const treePositions = [
+            [2, 5], [4, 8], [3, this.height - 2], [7, 4], [7, this.height - 3],
+        ];
+        const minePositions = [
+            [this.width - 3, 5], [this.width - 5, 9], [this.width - 3, this.height - 3],
+        ];
+        for (const [x, y] of treePositions) {
+            if (x > 0 && y > 3 && x < this.width - 1 && y <= this.height && !this.isCastleCell(x, y)) {
+                this.resourceNodes.set(`${x},${y}`, { type: 'tree' });
+            }
+        }
+        for (const [x, y] of minePositions) {
+            if (x > 0 && y > 3 && x < this.width - 1 && y <= this.height && !this.isCastleCell(x, y)) {
+                this.resourceNodes.set(`${x},${y}`, { type: 'mine' });
+            }
+        }
     }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), this.speed);
-        }
+        if (this.finished) this.resetGame();
+        if (this.isRunning) return;
+        this.setRunning(true);
+        this.interval = setInterval(this.tick, this.tickSpeed);
+        this.setStatus('Поселение работает. Назначайте рабочих кликами.', 'info');
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
+        if (this.interval !== null) {
             clearInterval(this.interval);
+            this.interval = null;
         }
+        this.setRunning(false);
     }
 
     clear() {
-        this.pause();
-        this.resources = { wood: 0, gold: 0 };
-        this.units = [];
-        this.buildings = [];
-        this.visibleTiles = {};
-        this.gridManager.selectedTiles = {};
-        this.gridManager.updateVisibleTiles();
+        this.resetGame();
     }
 
     update() {
-        this.updateUnits();
-        this.updateBuildings();
-        this.updateVisibleTiles();
+        if (!this.isRunning || this.finished) return;
+        this.tickCount++;
+        for (const worker of this.workers) {
+            if (!worker.task) continue;
+            const node = this.resourceNodes.get(worker.task);
+            if (!node) {
+                worker.task = null;
+                continue;
+            }
+            if (node.type === 'tree') this.resources.wood += 2;
+            if (node.type === 'mine') this.resources.gold += 1;
+        }
+        this.render();
+    }
+
+    onStageClick(event) {
+        if (event?.evt?.button !== undefined && event.evt.button !== 0) return;
+        const cell = this.gridManager.getGridPosition?.();
+        if (!cell) return;
+        const worker = this.workers.find((item) => item.x === cell.x && item.y === cell.y);
+        if (worker) {
+            this.selectedWorker = worker.id;
+            this.render();
+            this.setStatus(`Рабочий ${worker.id} выбран. Теперь нажмите на дерево или рудник.`, 'info');
+            return;
+        }
+
+        const nodeKey = `${cell.x},${cell.y}`;
+        const node = this.resourceNodes.get(nodeKey);
+        if (node) {
+            this.assignWorker(nodeKey, node);
+            return;
+        }
+
+        if (this.isCastleCell(cell.x, cell.y)) this.upgradeCastle();
+    }
+
+    onContextMenu(event) {
+        event?.evt?.preventDefault?.();
+        const cell = this.gridManager.getGridPosition?.();
+        if (cell && this.isCastleCell(cell.x, cell.y)) this.hireWorker();
+    }
+
+    assignWorker(nodeKey, node) {
+        let worker = this.workers.find((item) => item.id === this.selectedWorker);
+        if (!worker) worker = this.workers.find((item) => !item.task);
+        if (!worker) {
+            this.setStatus('Нет свободных рабочих. Выберите занятого рабочего или наймите нового.', 'warning');
+            return;
+        }
+
+        worker.task = nodeKey;
+        const [nodeX, nodeY] = nodeKey.split(',').map(Number);
+        worker.x = Math.max(1, Math.min(this.width - 2, nodeX + (nodeX < this.castle.x ? 1 : -1)));
+        worker.y = nodeY;
+        this.selectedWorker = null;
+        this.render();
+        this.setStatus(`Рабочий ${worker.id} добывает ${node.type === 'tree' ? 'дерево' : 'золото'}.`, 'success');
+    }
+
+    upgradeCost() {
+        return this.castle.level === 1 ? { wood: 30, gold: 12 } : { wood: 65, gold: 30 };
+    }
+
+    upgradeCastle() {
+        if (this.finished) return;
+        const cost = this.upgradeCost();
+        if (this.resources.wood < cost.wood || this.resources.gold < cost.gold) {
+            this.setStatus(`Для уровня ${this.castle.level + 1} нужно ${cost.wood} дерева и ${cost.gold} золота.`, 'warning');
+            return;
+        }
+        this.resources.wood -= cost.wood;
+        this.resources.gold -= cost.gold;
+        this.castle.level++;
+        this.render();
+
+        if (this.castle.level >= 3) {
+            this.finished = true;
+            this.finish('Победа! Замок достиг 3 уровня — поселение стало королевством.', 'success');
+        } else {
+            this.setStatus('Замок улучшен до 2 уровня. Соберите ресурсы для финального улучшения.', 'success');
+        }
+    }
+
+    hireWorker() {
+        if (this.finished) return;
+        if (this.workers.length >= 6) {
+            this.setStatus('В поселении уже максимум рабочих.', 'warning');
+            return;
+        }
+        const cost = { wood: 18, gold: 6 };
+        if (this.resources.wood < cost.wood || this.resources.gold < cost.gold) {
+            this.setStatus(`Новый рабочий стоит ${cost.wood} дерева и ${cost.gold} золота.`, 'warning');
+            return;
+        }
+        this.resources.wood -= cost.wood;
+        this.resources.gold -= cost.gold;
+        const id = this.workers.length + 1;
+        this.workers.push({ id, x: this.castle.x + (id % 3) - 1, y: this.castle.y + 2, task: null });
+        this.render();
+        this.setStatus(`Нанят рабочий ${id}.`, 'success');
+    }
+
+    isCastleCell(x, y) {
+        return Math.abs(x - this.castle.x) <= 1 && Math.abs(y - this.castle.y) <= 1;
+    }
+
+    render() {
+        const tiles = {};
+        for (let x = 0; x < this.width; x++) {
+            tiles[`${x},3`] = { type: 'border', color: '#40505f' };
+            tiles[`${x},${this.height + 1}`] = { type: 'border', color: '#40505f' };
+        }
+        for (const [key, node] of this.resourceNodes) {
+            tiles[key] = node.type === 'tree'
+                ? { type: 'tree', color: '#2f8f4e', text: '♣', textColor: '#d9f7df' }
+                : { type: 'mine', color: '#8a6f3d', text: '◆', textColor: '#ffd166' };
+        }
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                tiles[`${this.castle.x + dx},${this.castle.y + dy}`] = {
+                    type: 'castle',
+                    color: '#5d6d7e',
+                    text: dx === 0 && dy === 0 ? String(this.castle.level) : '',
+                    textColor: '#ffffff',
+                };
+            }
+        }
+        for (const worker of this.workers) {
+            tiles[`${worker.x},${worker.y}`] = {
+                type: 'worker',
+                color: worker.id === this.selectedWorker ? '#ffca3a' : '#4dabf7',
+                text: String(worker.id),
+                textColor: '#102030',
+            };
+        }
+
+        tiles['0,0'] = {
+            type: 'text',
+            text: `Дерево: ${this.resources.wood}   Золото: ${this.resources.gold}   Рабочие: ${this.workers.length}`,
+            color: '#f3f6fb',
+            widthCells: 25,
+        };
+        const cost = this.upgradeCost();
+        tiles['0,1'] = {
+            type: 'text',
+            text: `Замок: ${this.castle.level}/3   Улучшение: ${cost.wood} дерева + ${cost.gold} золота`,
+            color: '#ffd166',
+            widthCells: 27,
+        };
+        tiles['0,2'] = {
+            type: 'text',
+            text: 'ЛКМ: выбрать/назначить/улучшить • ПКМ по замку: нанять',
+            color: '#8ecae6',
+            widthCells: 30,
+        };
+        this.gridManager.selectedTiles = tiles;
         this.gridManager.updateVisibleTiles();
     }
 
-    generateMap() {
-        // Генерация леса
-        for (let x = 0; x < this.mapWidth; x++) {
-            for (let y = 0; y < this.mapHeight; y++) {
-                if (Math.random() < 0.2) {
-                    this.gridManager.selectedTiles[`${x},${y}`] = { type: 'forest', color: '#00FF00' };
-                }
-            }
-        }
-
-        // Генерация воды по границам
-        for (let x = 0; x < this.mapWidth; x++) {
-            this.gridManager.selectedTiles[`${x},0`] = { type: 'water', color: '#0000FF' };
-            this.gridManager.selectedTiles[`${x},${this.mapHeight - 1}`] = { type: 'water', color: '#0000FF' };
-        }
-        for (let y = 0; y < this.mapHeight; y++) {
-            this.gridManager.selectedTiles[`0,${y}`] = { type: 'water', color: '#0000FF' };
-            this.gridManager.selectedTiles[`${this.mapWidth - 1},${y}`] = { type: 'water', color: '#0000FF' };
-        }
-    }
-
-    updateUnits() {
-        this.units.forEach(unit => {
-            if (unit.type === 'worker' && unit.task === 'gather') {
-                this.gatherWood(unit);
-            }
-        });
-    }
-
-    updateBuildings() {
-        this.buildings.forEach(building => {
-            if (building.type === 'castle') {
-                this.produceUnits(building);
-            }
-        });
-    }
-
-    updateVisibleTiles() {
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        this.offsetX = Math.floor((this.mapWidth - visibleWidth) / 2);
-        this.offsetY = Math.floor((this.mapHeight - visibleHeight) / 2);
-
-        this.visibleTiles = {};
-        for (let x = this.offsetX; x < this.offsetX + visibleWidth; x++) {
-            for (let y = this.offsetY; y < this.offsetY + visibleHeight; y++) {
-                const key = `${x},${y}`;
-                if (this.gridManager.selectedTiles[key]) {
-                    this.visibleTiles[key] = this.gridManager.selectedTiles[key];
-                }
-            }
-        }
-    }
-
-    gatherWood(unit) {
-        const forestTile = this.findNearestForest(unit.x, unit.y);
-        if (forestTile) {
-            unit.task = 'return';
-            unit.target = forestTile;
-            this.resources.wood += 10;
-            delete this.gridManager.selectedTiles[forestTile];
-        }
-    }
-
-    findNearestForest(x, y) {
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                const key = `${x + dx},${y + dy}`;
-                if (this.gridManager.selectedTiles[key] && this.gridManager.selectedTiles[key].type === 'forest') {
-                    return key;
-                }
-            }
-        }
-        return null;
-    }
-
-    produceUnits(building) {
-        if (this.resources.wood >= 50) {
-            this.resources.wood -= 50;
-            this.units.push({ type: 'worker', x: building.x + 1, y: building.y + 1, task: 'idle' });
-        }
-    }
-
-    bindMouseEvents() {
-        this.gridManager.stage.off();
-        this.gridManager.stage.on('click', (event) => {
-            const pos = this.gridManager.stage.getPointerPosition();
-            if (!pos) return;
-
-            const tileX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
-            const tileY = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize);
-
-            this.handleLeftClick(tileX, tileY);
-        });
-
-        this.gridManager.stage.on('contextmenu', (event) => {
-            event.evt.preventDefault();
-            const pos = this.gridManager.stage.getPointerPosition();
-            if (!pos) return;
-
-            const tileX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
-            const tileY = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize);
-
-            this.handleRightClick(tileX, tileY);
-        });
-    }
-
-    handleLeftClick(x, y) {
-        const key = `${x},${y}`;
-        if (this.gridManager.selectedTiles[key] && this.gridManager.selectedTiles[key].type === 'worker') {
-            this.selectedUnit = this.units.find(unit => unit.x === x && unit.y === y);
-        } else if (this.selectedUnit) {
-            this.selectedUnit.x = x;
-            this.selectedUnit.y = y;
-            this.selectedUnit.task = 'idle';
-            this.selectedUnit = null;
-        }
-    }
-
-    handleRightClick(x, y) {
-        if (this.selectedUnit && this.selectedUnit.type === 'worker') {
-            const forestTile = this.findNearestForest(x, y);
-            if (forestTile) {
-                this.selectedUnit.task = 'gather';
-                this.selectedUnit.target = forestTile;
-            }
-        }
-    }
-
-    toggleCell(x, y) {
-        // В стратегии нет необходимости переключать клетки
-    }
-
-    showContextMenu(x, y) {
-        // Контекстное меню для управления юнитами
+    onResize() {
+        this.resetGame();
     }
 }

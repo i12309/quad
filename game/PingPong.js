@@ -18,128 +18,217 @@ export class PingPong extends BaseModule {
         this.fieldHeight = 0;
         this.offsetX = 0;
         this.offsetY = 0;
+        this.gameOver = false;
     }
 
     setup() {
-        this.clear(); // Инициализируем игру
-        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
-        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
+        this.clearBindings();
+        this.bindMouseEvents();
+        this.clear();
     }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), this.speed);
+        if (this.isRunning) return;
+
+        if (this.gameOver) {
+            this.resetState();
+            this.render();
         }
+
+        this.isRunning = true;
+        this.setStatus('Игра идёт. Двигайте платформу мышью.', 'running');
+        this.interval = setInterval(() => this.update(), this.speed);
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
+        if (this.interval !== null) {
             clearInterval(this.interval);
+            this.interval = null;
         }
+        this.isRunning = false;
     }
 
     clear() {
         this.pause();
+        this.resetState();
+        this.render();
+        this.setStatus('Нажмите «Старт» и управляйте платформой мышью.', 'ready');
+    }
+
+    resetState() {
+        this.calculateLayout();
         this.score = 0;
-        this.gridManager.selectedTiles = {};
-        this.ball = { x: Math.floor(this.fieldWidth / 2), y: Math.floor(this.fieldHeight / 2), dx: 1, dy: -1 };
-        this.platform = { x: Math.floor(this.fieldWidth / 2) - Math.floor(this.platform.width / 2), width: 6 };
-        this.drawBorder(); // Рассчитываем размеры поля и Рисуем границы поля
-        this.bindMouseEvents(); // Привязываем события мыши
-        this.gridManager.updateVisibleTiles();
+        this.gameOver = false;
+        const platformWidth = Math.min(6, this.fieldWidth);
+        this.ball = {
+            x: Math.floor(this.fieldWidth / 2),
+            y: Math.floor(this.fieldHeight / 2),
+            dx: 1,
+            dy: -1
+        };
+        this.platform = {
+            x: Math.floor((this.fieldWidth - platformWidth) / 2),
+            width: platformWidth
+        };
+    }
+
+    calculateLayout() {
+        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+        this.fieldWidth = Math.max(8, Math.floor(visibleWidth / 3));
+        this.fieldHeight = Math.max(10, Math.floor(visibleHeight * 0.8));
+        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
     }
 
     update() {
-        const oldBallKey = `${this.offsetX + this.ball.x},${this.offsetY + this.ball.y}`;
-        delete this.gridManager.selectedTiles[oldBallKey];
+        if (!this.isRunning) return;
 
-        this.ball.x += this.ball.dx;
-        this.ball.y += this.ball.dy;
+        const previousX = this.ball.x;
+        const previousY = this.ball.y;
+        let nextX = previousX + this.ball.dx;
+        let nextY = previousY + this.ball.dy;
+        const maxX = this.fieldWidth - 1;
 
-        if (this.ball.x <= 0 || this.ball.x >= this.fieldWidth - 1) {
-            this.ball.dx *= -1;
+        // Preserve overshoot so higher ball speeds cannot tunnel through walls.
+        while (nextX < 0 || nextX > maxX) {
+            if (nextX < 0) {
+                nextX = -nextX;
+                this.ball.dx = Math.abs(this.ball.dx);
+            } else {
+                nextX = 2 * maxX - nextX;
+                this.ball.dx = -Math.abs(this.ball.dx);
+            }
         }
-        if (this.ball.y <= 0) {
-            this.ball.dy *= -1;
+
+        if (nextY < 0) {
+            nextY = -nextY;
+            this.ball.dy = Math.abs(this.ball.dy);
         }
 
-        if (this.ball.y === this.fieldHeight - 6) {
-            if (this.ball.x >= this.platform.x && this.ball.x < this.platform.x + this.platform.width) {
-                this.ball.dy *= -1;
+        const paddleY = this.fieldHeight - 5;
+        const crossesPaddle = this.ball.dy > 0 && previousY < paddleY && nextY >= paddleY;
+        if (crossesPaddle) {
+            const progress = (paddleY - previousY) / (nextY - previousY);
+            const hitX = previousX + (nextX - previousX) * progress;
+            const platformEnd = this.platform.x + this.platform.width;
+
+            if (hitX >= this.platform.x && hitX < platformEnd) {
+                nextY = 2 * paddleY - 1 - nextY;
+                this.ball.dy = -Math.abs(this.ball.dy);
+                this.applyPaddleAngle(hitX);
                 this.score++;
             } else {
-                this.pause();
-                alert(`Игра окончена! Ваш счёт: ${this.score}`);
-                this.clear();
+                this.endGame(`Игра окончена. Счёт: ${this.score}`);
+                return;
             }
+        } else if (nextY >= this.fieldHeight) {
+            this.endGame(`Игра окончена. Счёт: ${this.score}`);
+            return;
         }
+
+        this.ball.x = Math.max(0, Math.min(maxX, Math.round(nextX)));
+        this.ball.y = Math.round(nextY);
+        this.render();
+    }
+
+    applyPaddleAngle(hitX) {
+        const relativeHit = (hitX - this.platform.x) / this.platform.width;
+        const horizontalSpeed = Math.max(1, Math.abs(this.ball.dx));
+        if (relativeHit < 1 / 3) {
+            this.ball.dx = -horizontalSpeed;
+        } else if (relativeHit > 2 / 3) {
+            this.ball.dx = horizontalSpeed;
+        }
+    }
+
+    endGame(message) {
+        this.pause();
+        this.gameOver = true;
+        this.finish(message, 'result');
+    }
+
+    render() {
+        const tiles = {};
+        this.drawBorder(tiles);
 
         const ballKey = `${this.offsetX + this.ball.x},${this.offsetY + this.ball.y}`;
-        this.gridManager.selectedTiles[ballKey] = { type: 'ball', color: '#FFFF00' };
+        tiles[ballKey] = { type: 'ball', color: '#FFFF00' };
 
-        // Удалить все ячейки с type === 'platform'
-        Object.keys(this.gridManager.selectedTiles).forEach((key) => {
-            if (this.gridManager.selectedTiles[key].type === 'platform') {
-                delete this.gridManager.selectedTiles[key];
-            }
-        });
-
+        const paddleY = this.offsetY + this.fieldHeight - 5;
         for (let i = 0; i < this.platform.width; i++) {
-            const platformKey = `${this.offsetX + this.platform.x + i},${this.offsetY + this.fieldHeight - 5}`;
-            this.gridManager.selectedTiles[platformKey] = { type: 'platform', color: '#0000FF' };
+            tiles[`${this.offsetX + this.platform.x + i},${paddleY}`] = {
+                type: 'platform',
+                color: '#2F80ED'
+            };
         }
 
+        const scoreKey = `${this.offsetX},${Math.max(0, this.offsetY - 2)}`;
+        tiles[scoreKey] = {
+            type: 'text',
+            text: `Счёт: ${this.score}`,
+            color: '#FFFFFF',
+            textColor: '#FFFFFF'
+        };
+
+        this.gridManager.selectedTiles = tiles;
         this.gridManager.updateVisibleTiles();
     }
 
-    drawBorder() {
-        // Вычисляем размеры поля и его координаты
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        this.fieldWidth = Math.floor(visibleWidth / 3);
-        this.fieldHeight = Math.floor(visibleHeight * 0.8);
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
-        
-        // рисуем игровое поле 
-        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
-            for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
-                const key = `${x},${y}`;
+    drawBorder(tiles) {
+        for (let x = this.offsetX - 1; x <= this.offsetX + this.fieldWidth; x++) {
+            for (let y = this.offsetY - 1; y <= this.offsetY + this.fieldHeight; y++) {
                 if (x === this.offsetX - 1 || x === this.offsetX + this.fieldWidth ||
                     y === this.offsetY - 1 || y === this.offsetY + this.fieldHeight) {
-                    this.gridManager.selectedTiles[key] = { type: 'wall', color: '#CCCCCC' };
+                    tiles[`${x},${y}`] = { type: 'wall', color: '#CCCCCC' };
                 }
             }
         }
-        this.gridManager.updateVisibleTiles();
     }
 
     bindMouseEvents() {
-        this.gridManager.stage.off();
-        this.gridManager.stage.on('mousemove', (event) => {
+        this.bindStage('mousemove', () => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
 
-            const platformX = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
-            this.platform.x = Math.max(0, Math.min(platformX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width));
+            const pointerX = Math.floor(
+                (pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize
+            ) - this.offsetX;
+            this.platform.x = Math.max(
+                0,
+                Math.min(pointerX - Math.floor(this.platform.width / 2), this.fieldWidth - this.platform.width)
+            );
+            this.render();
         });
     }
 
-    showContextMenu(x, y) {
-        // 
+    onResize() {
+        const oldWidth = this.fieldWidth;
+        const oldHeight = this.fieldHeight;
+        const oldPaddleRange = Math.max(1, oldWidth - this.platform.width);
+        const paddlePosition = this.platform.x / oldPaddleRange;
+        const ballXPosition = this.ball.x / Math.max(1, oldWidth - 1);
+        const ballYPosition = this.ball.y / Math.max(1, oldHeight - 1);
+
+        this.calculateLayout();
+        this.platform.width = Math.min(this.platform.width, this.fieldWidth);
+        this.platform.x = Math.round(
+            paddlePosition * Math.max(0, this.fieldWidth - this.platform.width)
+        );
+        this.ball.x = Math.round(ballXPosition * Math.max(0, this.fieldWidth - 1));
+        this.ball.y = Math.min(
+            this.fieldHeight - 6,
+            Math.max(0, Math.round(ballYPosition * Math.max(0, this.fieldHeight - 1)))
+        );
+        this.render();
     }
 
-    toggleCell(x, y) {
-        // В PingPong нет необходимости переключать клетки
+    destroy() {
+        super.destroy();
     }
 
-    handleLeftClick(x, y) {
-        // В PingPong левый клик не используется
-    }
-
-    handleRightClick(x, y) {
-        //this.showContextMenu(x, y);
-    }
+    showContextMenu() {}
+    toggleCell() {}
+    handleLeftClick() {}
+    handleRightClick() {}
 }

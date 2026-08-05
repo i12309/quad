@@ -10,54 +10,60 @@ export class Snake extends BaseModule {
         this.gridManager = gridManager;
         this.isRunning = false;
         this.interval = null;
-        this.speed = 200; // Скорость игры (меньше = быстрее)
+        this.speed = 200;
         this.score = 0;
         this.fieldWidth = 0;
         this.fieldHeight = 0;
         this.offsetX = 0;
         this.offsetY = 0;
-        this.snake = []; // Массив сегментов змейки
-        this.direction = 'right'; // Направление движения
-        this.food = { x: 0, y: 0 }; // Позиция еды
+        this.snake = [];
+        this.direction = 'right';
+        this.queuedDirection = 'right';
+        this.food = null;
+        this.gameOver = false;
     }
 
     setup() {
-        this.clear();
-        this.initSnake(); // Инициализация змейки
-        this.generateFood(); // Генерация еды
-        this.drawBorder();
+        this.clearBindings();
         this.bindKeyboardEvents();
-        this.drawScore();
+        this.clear();
     }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), this.speed);
+        if (this.isRunning) return;
+
+        if (this.gameOver) {
+            this.resetState();
+            this.render();
         }
+
+        this.isRunning = true;
+        this.setStatus('Игра идёт. Управление — стрелками.', 'running');
+        this.interval = setInterval(() => this.update(), this.speed);
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
+        if (this.interval !== null) {
             clearInterval(this.interval);
+            this.interval = null;
         }
+        this.isRunning = false;
     }
 
     clear() {
         this.pause();
-        this.score = 0;
-        this.snake = [];
-        this.direction = 'right';
-        this.gridManager.selectedTiles = {};
-        this.drawBorder();
-        this.initSnake();
-        this.generateFood();
-        this.gridManager.updateVisibleTiles();
+        this.resetState();
+        this.render();
+        this.setStatus('Нажмите «Старт». Управление — стрелками.', 'ready');
     }
 
-    initSnake() {
-        // Начальная змейка из 3 сегментов
+    resetState() {
+        this.calculateLayout();
+        this.score = 0;
+        this.direction = 'right';
+        this.queuedDirection = 'right';
+        this.gameOver = false;
+
         const startX = Math.floor(this.fieldWidth / 2);
         const startY = Math.floor(this.fieldHeight / 2);
         this.snake = [
@@ -65,134 +71,165 @@ export class Snake extends BaseModule {
             { x: startX - 1, y: startY },
             { x: startX - 2, y: startY }
         ];
+        this.generateFood();
+    }
+
+    calculateLayout() {
+        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+        this.fieldWidth = Math.max(3, Math.floor(visibleWidth * 0.9));
+        this.fieldHeight = Math.max(3, Math.floor(visibleHeight * 0.8));
+        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
     }
 
     generateFood() {
-        let foodX, foodY;
-        do {
-            foodX = Math.floor(Math.random() * this.fieldWidth);
-            foodY = Math.floor(Math.random() * this.fieldHeight);
-        } while (this.snake.some(segment => segment.x === foodX && segment.y === foodY));
-        this.food = { x: foodX, y: foodY };
+        const occupied = new Set(this.snake.map(({ x, y }) => `${x},${y}`));
+        const freeCells = [];
+
+        for (let x = 0; x < this.fieldWidth; x++) {
+            for (let y = 0; y < this.fieldHeight; y++) {
+                if (!occupied.has(`${x},${y}`)) freeCells.push({ x, y });
+            }
+        }
+
+        if (freeCells.length === 0) {
+            this.food = null;
+            return false;
+        }
+
+        this.food = freeCells[Math.floor(Math.random() * freeCells.length)];
+        return true;
     }
 
     update() {
-        // Удаляем старые сегменты змейки
-        this.snake.forEach(segment => {
-            const key = `${this.offsetX + segment.x},${this.offsetY + segment.y}`;
-            delete this.gridManager.selectedTiles[key];
-        });
+        if (!this.isRunning) return;
 
-        // Вычисляем новую голову
+        this.direction = this.queuedDirection;
         const head = { ...this.snake[0] };
         switch (this.direction) {
-            case 'up':
-                head.y -= 1;
-                break;
-            case 'down':
-                head.y += 1;
-                break;
-            case 'left':
-                head.x -= 1;
-                break;
-            case 'right':
-                head.x += 1;
-                break;
+            case 'up': head.y -= 1; break;
+            case 'down': head.y += 1; break;
+            case 'left': head.x -= 1; break;
+            case 'right': head.x += 1; break;
         }
 
-        // Проверка столкновений
-        if (head.x < 0 || head.x >= this.fieldWidth || head.y < 0 || head.y >= this.fieldHeight ||
-            this.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-            this.pause();
-            alert(`Игра окончена! Ваш счёт: ${this.score}`);
-            this.clear();
+        const willGrow = this.food !== null && head.x === this.food.x && head.y === this.food.y;
+        const bodyToCheck = willGrow ? this.snake : this.snake.slice(0, -1);
+        const hitWall = head.x < 0 || head.x >= this.fieldWidth || head.y < 0 || head.y >= this.fieldHeight;
+        const hitSnake = bodyToCheck.some(({ x, y }) => x === head.x && y === head.y);
+
+        if (hitWall || hitSnake) {
+            this.endGame(`Игра окончена. Счёт: ${this.score}`);
             return;
         }
 
-        // Добавляем новую голову
         this.snake.unshift(head);
-
-        // Проверка съедания еды
-        if (head.x === this.food.x && head.y === this.food.y) {
+        if (willGrow) {
             this.score += 10;
-            this.generateFood();
+            if (!this.generateFood()) {
+                this.render();
+                this.endGame(`Победа! Поле заполнено. Счёт: ${this.score}`);
+                return;
+            }
         } else {
-            // Удаляем хвост, если еда не съедена
             this.snake.pop();
         }
 
-        // Отрисовка змейки
+        this.render();
+    }
+
+    endGame(message) {
+        this.pause();
+        this.gameOver = true;
+        this.finish(message, 'result');
+    }
+
+    render() {
+        const tiles = {};
+        this.drawBorder(tiles);
+
         this.snake.forEach((segment, index) => {
             const key = `${this.offsetX + segment.x},${this.offsetY + segment.y}`;
-            this.gridManager.selectedTiles[key] = {
+            tiles[key] = {
                 type: 'snake',
-                color: index === 0 ? '#00FF00' : '#00CC00' // Голова ярче
+                color: index === 0 ? '#00FF00' : '#00CC00'
             };
         });
 
-        // Отрисовка еды
-        const foodKey = `${this.offsetX + this.food.x},${this.offsetY + this.food.y}`;
-        this.gridManager.selectedTiles[foodKey] = { type: 'food', color: '#FF0000' };
+        if (this.food !== null) {
+            const foodKey = `${this.offsetX + this.food.x},${this.offsetY + this.food.y}`;
+            tiles[foodKey] = { type: 'food', color: '#FF0000' };
+        }
 
-        this.drawScore();
+        const scoreKey = `${this.offsetX},${Math.max(0, this.offsetY - 2)}`;
+        tiles[scoreKey] = {
+            type: 'text',
+            text: `Счёт: ${this.score}`,
+            color: '#FFFFFF',
+            textColor: '#FFFFFF'
+        };
+
+        this.gridManager.selectedTiles = tiles;
         this.gridManager.updateVisibleTiles();
     }
 
-    drawBorder() {
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        this.fieldWidth = Math.floor(visibleWidth * 0.9); // 90% ширины
-        this.fieldHeight = Math.floor(visibleHeight * 0.8); // 80% высоты
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
-
-        // Рисуем границы поля
-        for (let x = this.offsetX - 1; x < this.offsetX + this.fieldWidth + 1; x++) {
-            for (let y = this.offsetY - 1; y < this.offsetY + this.fieldHeight + 1; y++) {
-                const key = `${x},${y}`;
+    drawBorder(tiles) {
+        for (let x = this.offsetX - 1; x <= this.offsetX + this.fieldWidth; x++) {
+            for (let y = this.offsetY - 1; y <= this.offsetY + this.fieldHeight; y++) {
                 if (x === this.offsetX - 1 || x === this.offsetX + this.fieldWidth ||
                     y === this.offsetY - 1 || y === this.offsetY + this.fieldHeight) {
-                    this.gridManager.selectedTiles[key] = { type: 'wall', color: '#CCCCCC' };
+                    tiles[`${x},${y}`] = { type: 'wall', color: '#CCCCCC' };
                 }
             }
         }
     }
 
-    drawScore() {
-        const scoreKey = `${this.offsetX + this.fieldWidth + 2},${this.offsetY + 1}`;
-        this.gridManager.selectedTiles[scoreKey] = {
-            type: 'text',
-            text: `Score: ${this.score}`,
-            color: '#FFFFFF'
-        };
-    }
-
     bindKeyboardEvents() {
-        document.addEventListener('keydown', (e) => {
-            if (!this.isRunning) return;
+        this.bindDom(document, 'keydown', (event) => {
+            const directions = {
+                ArrowUp: 'up',
+                ArrowDown: 'down',
+                ArrowLeft: 'left',
+                ArrowRight: 'right'
+            };
+            const nextDirection = directions[event.key];
+            if (!nextDirection || !this.isRunning) return;
 
-            switch (e.key) {
-                case 'ArrowUp':
-                    if (this.direction !== 'down') this.direction = 'up';
-                    break;
-                case 'ArrowDown':
-                    if (this.direction !== 'up') this.direction = 'down';
-                    break;
-                case 'ArrowLeft':
-                    if (this.direction !== 'right') this.direction = 'left';
-                    break;
-                case 'ArrowRight':
-                    if (this.direction !== 'left') this.direction = 'right';
-                    break;
+            event.preventDefault();
+            const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
+            // Compare with the direction of the current tick. This prevents two
+            // quick key presses from producing an effective 180° turn.
+            if (nextDirection !== opposites[this.direction]) {
+                this.queuedDirection = nextDirection;
             }
         });
     }
 
-    handleLeftClick(x, y) {
-        // Не используется в Змейке
+    onResize() {
+        this.calculateLayout();
+        const stateFits = this.snake.every(({ x, y }) =>
+            x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight
+        ) && (this.food === null || (
+            this.food.x >= 0 && this.food.x < this.fieldWidth &&
+            this.food.y >= 0 && this.food.y < this.fieldHeight
+        ));
+
+        if (!stateFits) {
+            this.pause();
+            this.resetState();
+            this.render();
+            this.finish('Размер поля изменился. Игра начата заново.', 'info');
+            return;
+        }
+
+        this.render();
     }
 
-    handleRightClick(x, y) {
-        // Не используется в Змейке
+    destroy() {
+        super.destroy();
     }
+
+    handleLeftClick() {}
+    handleRightClick() {}
 }

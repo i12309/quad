@@ -1,85 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quad</title>
-    <script src="./src/konva.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#11161f">
+    <title>QUAD — игры из больших пикселей</title>
     <link rel="stylesheet" href="styles.css">
-    </style>
+    <script src="./src/konva.min.js"></script>
 </head>
 <body>
-    <div id="controls">
-        <div id="start-menu">
-            <h2>Выберите игру</h2>
-            <div id="game-buttons-container"></div>
-        </div>
-    
-        <div id="game-controls" style="display: none;">
-            <button id="start-stop-btn">Старт</button>
-            <button id="clear-btn">Очистить</button>
-            <button id="back-to-menu-btn">Выйти в главное меню</button>
-        </div>
-    
-        <div id="game-container">
-            <!-- Здесь будет отображаться игровое поле -->
-        </div>
-    </div>
-    <div id="container"></div>
+    <main id="app-ui">
+        <section id="start-menu" class="menu-panel" aria-labelledby="app-title">
+            <header class="menu-header">
+                <p class="eyebrow">PIXEL PLAYGROUND</p>
+                <h1 id="app-title">QUAD</h1>
+                <p>Набор маленьких игр, где весь мир собран из крупных квадратных пикселей.</p>
+            </header>
 
-    <!-- Подключаем модули -->
-    <script type="module">
+            <p id="loading-status" class="loading-status" role="status" aria-live="polite">
+                Загружаю игры…
+            </p>
+            <div id="game-buttons-container" aria-label="Выбор игры"></div>
+        </section>
 
-        // Главные модули
-        import { GridManager } from './src/GridManager.js';
-        import { Controls } from './src/Controls.js';
+        <section id="game-controls" class="game-toolbar" hidden aria-label="Управление игрой">
+            <div class="game-heading">
+                <span id="game-icon" class="toolbar-icon" aria-hidden="true">🎮</span>
+                <span>
+                    <strong id="game-title">Игра</strong>
+                    <small id="game-description"></small>
+                </span>
+            </div>
 
-        // Инициализация приложения
-        const controls = new Controls();
-        const gridManager = new GridManager(controls);
-        controls.gridManager = gridManager;
+            <div class="control-buttons">
+                <button id="start-stop-btn" class="primary-button" type="button">Старт</button>
+                <button id="clear-btn" type="button">Заново</button>
+                <button id="back-to-menu-btn" type="button">Все игры</button>
+            </div>
 
-        // Модули игр =====================================================
+            <p id="game-status" class="game-status" role="status" aria-live="polite"></p>
+        </section>
+    </main>
 
-        // Динамическая загрузка PhysicsSimulation (опциональный модуль)
-        // Список файлов модулей
-        const gameModules = [
-            './game/Snake.js',
-            './game/GameOfLife.js',
-            './game/PingPong.js',
-            './game/Arkanoid.js',
-            './game/Minesweeper.js',
-            './game/SlidingPuzzle.js',
-            './game/TicTacToe.js',
-            './game/Tetris.js',
-            './game/Galaga.js',
-            './game/PipeMania.js',
-            './game/pole.js'
-        ];
+    <div id="container" aria-label="Игровое поле"></div>
 
-        // Загрузка модулей
-        Promise.all(
-            gameModules.map((modulePath) =>
-                import(modulePath)
-                    .then((module) => {
-                        const GameClass = module.default || module[Object.keys(module)[0]]; // Получаем класс из модуля
-                        const gameInstance = new GameClass(gridManager); // Создаём экземпляр игры
-                        controls.registerModule(gameInstance); // Регистрируем модуль
-                        return gameInstance;
-                    })
-                    .catch((error) => {
-                        console.warn(`Модуль ${modulePath} не найден. Продолжаем без него.`);
-                        return null; // Возвращаем null, чтобы не ломать Promise.all
-                    })
-            )
-        ).then((modules) => {
-            // Устанавливаем первый модуль как текущий
-            const firstModule = modules.find((module) => module !== null);
-            if (firstModule) {
-                controls.currentModule = firstModule;
-            }
-        });
-
-    </script>
+    <script type="module" src="./src/app.js"></script>
 </body>
 </html>

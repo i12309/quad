@@ -4,104 +4,94 @@ import { BaseModule } from './BaseModule.js';
 export class GameOfLife extends BaseModule {
     constructor(gridManager) {
         super();
-        this.gameIcon = '🧬'; //🎮
-        this.gameDescription = 'Классическая игра "Жизнь". Наблюдайте за эволюцией клеток.';
+        this.gameIcon = '🧬';
+        this.gameDescription = 'Классическая игра «Жизнь». Наблюдайте за эволюцией клеток.';
         this.name = 'GameOfLife';
         this.gridManager = gridManager;
         this.isRunning = false;
         this.interval = null;
-
         this.isDragging = false;
-        this.lastPointerPosition = { x: 0, y: 0 };
-        // Объект для отслеживания состояния клавиш
-        this.keys = {
-            ArrowLeft: false,
-            ArrowRight: false,
-            ArrowUp: false,
-            ArrowDown: false,
-        };
-        // Палитра цветов в HEX
-        this.colors = [
-            '#39D353', // rgb(57, 211, 83)
-            '#26A641', // rgb(38, 166, 65)
-            '#006D32', // rgb(0, 109, 50)
-            '#0E4429', // rgb(14, 68, 41)
-            '#2D333B'  // rgb(45, 51, 59)
-        ];
+        this.lastPointerPosition = null;
+        this.colors = ['#39D353', '#26A641', '#15913A', '#087B35', '#006D32'];
     }
 
     setup() {
-        this.bindMouseEvents(); // Привязываем события мыши
-        this.clear(); // Очищаем поле при настройке
+        this.clearBindings();
+        this.bindInputEvents();
+        this.clear();
     }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.interval = setInterval(() => this.update(), 100);
-        }
+        if (this.isRunning) return;
+        this.isRunning = true;
+        this.setStatus('Эволюция запущена.', 'running');
+        this.interval = setInterval(() => this.update(), 100);
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
+        if (this.interval !== null) {
             clearInterval(this.interval);
+            this.interval = null;
         }
+        this.isRunning = false;
     }
 
     clear() {
+        this.pause();
+        this.isDragging = false;
+        this.lastPointerPosition = null;
         this.gridManager.selectedTiles = {};
-        this.gridManager.updateVisibleTiles();
+        this.render();
+        this.setStatus('Левая кнопка — клетка, правая — перемещение поля.', 'ready');
     }
 
     update() {
+        if (!this.isRunning) return;
+
+        const currentTiles = this.gridManager.selectedTiles;
         const newSelectedTiles = {};
         const cellsToCheck = new Set();
 
-        for (const key in this.gridManager.selectedTiles) {
+        for (const key of Object.keys(currentTiles)) {
             const [x, y] = key.split(',').map(Number);
-            cellsToCheck.add(`${x},${y}`);
+            cellsToCheck.add(key);
             for (let dx = -1; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
-                    if (dx === 0 && dy === 0) continue;
-                    const nx = x + dx;
-                    const ny = y + dy;
-                    cellsToCheck.add(`${nx},${ny}`);
+                    if (dx !== 0 || dy !== 0) cellsToCheck.add(`${x + dx},${y + dy}`);
                 }
             }
         }
 
         cellsToCheck.forEach((key) => {
             const [x, y] = key.split(',').map(Number);
-            const neighbors = this.countNeighbors(x, y);
-            if (this.gridManager.selectedTiles[key]) {
-                if (neighbors === 2 || neighbors === 3) {
-                    newSelectedTiles[key] = { type: 'pixel', color: '#CCCCCC' };
-                }
-            } else {
-                if (neighbors === 3) {
-                    newSelectedTiles[key] = { type: 'pixel', color: '#FFFF00' };
-                }
+            const neighbors = this.countNeighbors(x, y, currentTiles);
+            const currentCell = currentTiles[key];
+
+            if (currentCell && (neighbors === 2 || neighbors === 3)) {
+                const age = (currentCell.age || 1) + 1;
+                newSelectedTiles[key] = { type: 'pixel', age, color: this.colorForAge(age) };
+            } else if (!currentCell && neighbors === 3) {
+                newSelectedTiles[key] = { type: 'pixel', age: 1, color: this.colorForAge(1) };
             }
         });
 
         this.gridManager.selectedTiles = newSelectedTiles;
-        this.gridManager.updateVisibleTiles();
+        this.render();
     }
 
-    countNeighbors(x, y) {
+    countNeighbors(x, y, tiles = this.gridManager.selectedTiles) {
         let count = 0;
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
                 if (dx === 0 && dy === 0) continue;
-                const nx = x + dx;
-                const ny = y + dy;
-                if (this.gridManager.selectedTiles[`${nx},${ny}`]) {
-                    count++;
-                }
+                if (tiles[`${x + dx},${y + dy}`]) count++;
             }
         }
         return count;
+    }
+
+    colorForAge(age) {
+        return this.colors[Math.min(Math.max(age - 1, 0), this.colors.length - 1)];
     }
 
     toggleCell(x, y) {
@@ -109,105 +99,87 @@ export class GameOfLife extends BaseModule {
         if (this.gridManager.selectedTiles[cellKey]) {
             delete this.gridManager.selectedTiles[cellKey];
         } else {
-            this.gridManager.selectedTiles[cellKey] = { type: 'pixel', color: '#CCCCCC' };
+            this.gridManager.selectedTiles[cellKey] = {
+                type: 'pixel',
+                age: 1,
+                color: this.colorForAge(1)
+            };
         }
+        this.render();
+    }
+
+    render() {
         this.gridManager.updateVisibleTiles();
     }
 
-    handleLeftClick(x, y) {
-        this.toggleCell(x, y);
+    pointerToCell() {
+        const pos = this.gridManager.stage.getPointerPosition();
+        if (!pos) return null;
+        return {
+            x: Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize),
+            y: Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize)
+        };
     }
 
-    handleRightClick(x, y) {
+    bindInputEvents() {
+        this.bindStage('click', (event) => {
+            if (event.evt.button !== 0) return;
+            const cell = this.pointerToCell();
+            if (cell) this.toggleCell(cell.x, cell.y);
+        });
 
-    }
+        this.bindStage('mousedown', (event) => {
+            if (event.evt.button !== 2) return;
+            event.evt.preventDefault();
+            this.isDragging = true;
+            this.lastPointerPosition = this.gridManager.stage.getPointerPosition();
+        });
 
-    bindMouseEvents() {
-        this.gridManager.stage.off();
-        this.gridManager.stage.on('click', (event) => {
+        this.bindStage('mousemove', () => {
+            if (!this.isDragging || !this.lastPointerPosition) return;
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
 
-            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize);
-            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize);
-
-            if (event.evt.button === 0) {
-                this.handleLeftClick(x, y);
-            } else if (event.evt.button === 2) {
-                this.handleRightClick(x, y);
-            }
+            this.gridManager.stage.x(this.gridManager.stage.x() + pos.x - this.lastPointerPosition.x);
+            this.gridManager.stage.y(this.gridManager.stage.y() + pos.y - this.lastPointerPosition.y);
+            this.lastPointerPosition = pos;
+            this.render();
         });
 
-        // Перемещение сцены мышью (правая кнопка)
-        this.gridManager.stage.on('mousedown', (event) => {
-            if (event.evt.button === 2) { // Правая кнопка
-                this.isDragging = true;
-                this.lastPointerPosition = this.gridManager.stage.getPointerPosition();
-            }
-        });
-
-        this.gridManager.stage.on('mousemove', (event) => {
-            if (this.isDragging) {
-                const pos = this.gridManager.stage.getPointerPosition();
-                if (pos) {
-                    const dx = pos.x - this.lastPointerPosition.x;
-                    const dy = pos.y - this.lastPointerPosition.y;
-                    this.gridManager.stage.x(this.gridManager.stage.x() + dx);
-                    this.gridManager.stage.y(this.gridManager.stage.y() + dy);
-                    this.lastPointerPosition = pos;
-                    this.gridManager.updateVisibleTiles(); 
-                }
-            }
-        });
-        this.gridManager.stage.on('mouseup', () => {
-            this.isDragging = false;
-        });
-
-        // Изменение размера окна
-        window.addEventListener('resize', () => {
-            this.gridManager.stage.width(window.innerWidth);
-            this.gridManager.stage.height(window.innerHeight);
-            this.gridManager.updateVisibleTiles(); 
-        });
-
-        // Обработка нажатия клавиш
-        window.addEventListener('keydown', (event) => {
-            if (this.keys.hasOwnProperty(event.key)) {
-                this.keys[event.key] = true; // Отмечаем клавишу как нажатую
-                this.moveStage();
-            }
-        });
-
-        // Обработка отпускания клавиш
-        window.addEventListener('keyup', (event) => {
-            if (this.keys.hasOwnProperty(event.key)) {
-                this.keys[event.key] = false; // Отмечаем клавишу как отпущенную
-            }
+        this.bindStage('mouseup mouseleave', () => this.stopDragging());
+        this.bindDom(window, 'mouseup', () => this.stopDragging());
+        this.bindDom(this.gridManager.stage.container(), 'contextmenu', (event) => event.preventDefault());
+        this.bindDom(window, 'keydown', (event) => {
+            const moves = {
+                ArrowLeft: [10, 0],
+                ArrowRight: [-10, 0],
+                ArrowUp: [0, 10],
+                ArrowDown: [0, -10]
+            };
+            const move = moves[event.key];
+            if (!move) return;
+            event.preventDefault();
+            this.gridManager.stage.x(this.gridManager.stage.x() + move[0]);
+            this.gridManager.stage.y(this.gridManager.stage.y() + move[1]);
+            this.render();
         });
     }
 
-
-    // Функция для перемещения сцены
-    moveStage() {
-        const moveStep = 10;
-        if (this.keys.ArrowLeft) {
-            this.gridManager.stage.x(this.gridManager.stage.x() + moveStep);
-        }
-        if (this.keys.ArrowRight) {
-            this.gridManager.stage.x(this.gridManager.stage.x() - moveStep);
-        }
-        if (this.keys.ArrowUp) {
-            this.gridManager.stage.y(this.gridManager.stage.y() + moveStep);
-        }
-        if (this.keys.ArrowDown) {
-            this.gridManager.stage.y(this.gridManager.stage.y() - moveStep);
-        }
-        this.gridManager.updateVisibleTiles();
+    stopDragging() {
+        this.isDragging = false;
+        this.lastPointerPosition = null;
     }
 
-    showContextMenu(x, y) {
-
+    onResize() {
+        this.render();
     }
 
+    destroy() {
+        this.stopDragging();
+        super.destroy();
+    }
 
+    handleLeftClick(x, y) { this.toggleCell(x, y); }
+    handleRightClick() {}
+    showContextMenu() {}
 }

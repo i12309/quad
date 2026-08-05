@@ -1,0 +1,10 @@
+{
+  "name": "quad-pixel-games",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/GridManager.js && node --check src/Controls.js && node --check game/BaseModule.js"
+  }
+}

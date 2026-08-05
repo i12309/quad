@@ -7,6 +7,7 @@ export class SlidingPuzzle extends BaseModule {
         this.gameIcon = '🧩';
         this.gameDescription = 'Пятнашки. Соберите пазл, перемещая плитки!';
         this.name = 'SlidingPuzzle';
+        this.usesStartStop = false;
         this.gridManager = gridManager;
         this.isRunning = false;
         this.fieldWidth = 4;
@@ -14,125 +15,131 @@ export class SlidingPuzzle extends BaseModule {
         this.board = [];
         this.offsetX = 0;
         this.offsetY = 0;
+        this.moves = 0;
+        this.gameOver = false;
+        this.resultMessage = '';
     }
 
-    // Реализация всех обязательных методов из BaseModule
+    setup() {
+        this.gridManager.setGridMetrics?.(56, this.gridManager.gap);
+        if (!this.gridManager.setGridMetrics) {
+            this.gridManager.tileSize = 56;
+            this.gridManager.totalSize = this.gridManager.tileSize + this.gridManager.gap;
+        }
+        this.bindMouseEvents();
+        this.reset();
+    }
+
+    reset() {
+        this.initBoard();
+        this.shuffleBoard();
+        this.moves = 0;
+        this.gameOver = false;
+        this.resultMessage = '';
+        this.isRunning = true;
+        this.calculateOffsets();
+        this.render();
+        this.setStatus('Соберите числа от 1 до 15', 'info');
+    }
 
     start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.log('Игра началась!');
-        }
+        if (this.gameOver) this.reset();
+        this.isRunning = true;
     }
 
     pause() {
-        if (this.isRunning) {
-            this.isRunning = false;
-            this.log('Игра на паузе.');
-        }
+        this.isRunning = false;
     }
 
     clear() {
-        this.pause();
-        this.board = [];
-        this.gridManager.selectedTiles = {};
-        this.initBoard();
-        this.shuffleBoard();
-        this.drawBorder();
-        this.log('Игра очищена и готова к новому раунду.');
+        this.reset();
     }
 
     update() {
-        // В пятнашках нет непрерывного обновления, как в других играх
-        this.log('Обновление состояния игры.');
+        this.render();
     }
 
     toggleCell(x, y) {
-        this.moveTile(x, y);
-        this.drawBorder();
+        if (!this.isRunning || this.gameOver) return;
+        if (!this.moveTile(x, y)) return;
+
+        this.moves++;
         if (this.checkWin()) {
-            alert('Победа!');
-            this.clear();
+            this.gameOver = true;
+            this.isRunning = false;
+            this.resultMessage = `Победа! Ходов: ${this.moves}`;
+            this.render();
+            this.finish(this.resultMessage, 'success');
+            return;
         }
+
+        this.render();
+        this.setStatus(`Ходов: ${this.moves}`, 'info');
     }
 
     handleLeftClick(x, y) {
         this.toggleCell(x, y);
-        this.log(`Левый клик на клетке (${x}, ${y}).`);
     }
 
-    handleRightClick(x, y) {
-        // В пятнашках правый клик не используется
-        this.log(`Правый клик на клетке (${x}, ${y}).`);
-    }
+    handleRightClick() {}
 
     bindMouseEvents() {
-        this.gridManager.stage.off(); // Убираем старые обработчики
-        this.gridManager.stage.on('click', (event) => {
+        this.clearBindings();
+        this.bindStage('click', () => {
             const pos = this.gridManager.stage.getPointerPosition();
             if (!pos) return;
 
-            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
-            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
+            const x = Math.floor(
+                (pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize
+            ) - this.offsetX;
+            const y = Math.floor(
+                (pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize
+            ) - this.offsetY;
 
             if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
                 this.handleLeftClick(x, y);
             }
         });
-
-        this.gridManager.stage.on('contextmenu', (event) => {
-            event.evt.preventDefault(); // Отключаем стандартное меню
-            const pos = this.gridManager.stage.getPointerPosition();
-            if (!pos) return;
-
-            const x = Math.floor((pos.x - this.gridManager.stage.x()) / this.gridManager.totalSize) - this.offsetX;
-            const y = Math.floor((pos.y - this.gridManager.stage.y()) / this.gridManager.totalSize) - this.offsetY;
-
-            if (x >= 0 && x < this.fieldWidth && y >= 0 && y < this.fieldHeight) {
-                this.handleRightClick(x, y);
-            }
-        });
-
-        this.log('События мыши привязаны.');
     }
 
-    showContextMenu(x, y) {
-        this.log(`Контекстное меню показано на клетке (${x}, ${y}).`);
+    calculateOffsets() {
+        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
+        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
+        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
+        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
     }
-
-    setup() {
-        this.clear();
-        this.bindMouseEvents();
-        this.log('Игра настроена и готова к запуску.');
-    }
-
-    // Вспомогательные методы
 
     initBoard() {
-        this.board = Array(this.fieldHeight)
-            .fill()
-            .map((_, y) => Array(this.fieldWidth)
-                .fill()
-                .map((_, x) => y * this.fieldWidth + x + 1)
-            );
-        this.board[this.fieldHeight - 1][this.fieldWidth - 1] = 0; // Пустая клетка
+        this.board = Array.from({ length: this.fieldHeight }, (_, y) =>
+            Array.from({ length: this.fieldWidth }, (_, x) => y * this.fieldWidth + x + 1)
+        );
+        this.board[this.fieldHeight - 1][this.fieldWidth - 1] = 0;
     }
 
     shuffleBoard() {
-        for (let i = 0; i < 1000; i++) {
-            const moves = this.getValidMoves();
-            const move = moves[Math.floor(Math.random() * moves.length)];
-            this.moveTile(move.x, move.y);
-        }
+        do {
+            this.initBoard();
+            let previousEmpty = null;
+            for (let i = 0; i < 320; i++) {
+                const empty = this.findEmptyPosition();
+                let candidates = this.getValidMoves().filter((move) =>
+                    !previousEmpty || move.x !== previousEmpty.x || move.y !== previousEmpty.y
+                );
+                if (candidates.length === 0) candidates = this.getValidMoves();
+                const move = candidates[Math.floor(Math.random() * candidates.length)];
+                previousEmpty = empty;
+                this.swapWithEmpty(move.x, move.y);
+            }
+        } while (this.checkWin());
     }
 
     getValidMoves() {
-        const emptyPos = this.findEmptyPosition();
+        const empty = this.findEmptyPosition();
         const moves = [];
-        if (emptyPos.x > 0) moves.push({ x: emptyPos.x - 1, y: emptyPos.y });
-        if (emptyPos.x < this.fieldWidth - 1) moves.push({ x: emptyPos.x + 1, y: emptyPos.y });
-        if (emptyPos.y > 0) moves.push({ x: emptyPos.x, y: emptyPos.y - 1 });
-        if (emptyPos.y < this.fieldHeight - 1) moves.push({ x: emptyPos.x, y: emptyPos.y + 1 });
+        if (empty.x > 0) moves.push({ x: empty.x - 1, y: empty.y });
+        if (empty.x < this.fieldWidth - 1) moves.push({ x: empty.x + 1, y: empty.y });
+        if (empty.y > 0) moves.push({ x: empty.x, y: empty.y - 1 });
+        if (empty.y < this.fieldHeight - 1) moves.push({ x: empty.x, y: empty.y + 1 });
         return moves;
     }
 
@@ -145,31 +152,47 @@ export class SlidingPuzzle extends BaseModule {
         return { x: -1, y: -1 };
     }
 
-    moveTile(x, y) {
-        const emptyPos = this.findEmptyPosition();
-        if (Math.abs(x - emptyPos.x) + Math.abs(y - emptyPos.y) === 1) {
-            this.board[emptyPos.y][emptyPos.x] = this.board[y][x];
-            this.board[y][x] = 0;
-        }
+    swapWithEmpty(x, y) {
+        const empty = this.findEmptyPosition();
+        this.board[empty.y][empty.x] = this.board[y][x];
+        this.board[y][x] = 0;
     }
 
-    drawBorder() {
-        const visibleWidth = Math.ceil(this.gridManager.stage.width() / this.gridManager.totalSize);
-        const visibleHeight = Math.ceil(this.gridManager.stage.height() / this.gridManager.totalSize);
-        this.offsetX = Math.floor((visibleWidth - this.fieldWidth) / 2);
-        this.offsetY = Math.floor((visibleHeight - this.fieldHeight) / 2);
+    moveTile(x, y) {
+        const empty = this.findEmptyPosition();
+        const isAdjacent = Math.abs(x - empty.x) + Math.abs(y - empty.y) === 1;
+        if (!isAdjacent) return false;
+        this.swapWithEmpty(x, y);
+        return true;
+    }
 
+    render() {
+        this.gridManager.selectedTiles = {};
         for (let y = 0; y < this.fieldHeight; y++) {
             for (let x = 0; x < this.fieldWidth; x++) {
+                const value = this.board[y][x];
                 const key = `${this.offsetX + x},${this.offsetY + y}`;
                 this.gridManager.selectedTiles[key] = {
                     type: 'tile',
-                    text: this.board[y][x] === 0 ? '' : this.board[y][x],
-                    color: this.board[y][x] === 0 ? '#1A1A1A' : '#00FF00'
+                    text: value === 0 ? '' : String(value),
+                    textColor: '#FFFFFF',
+                    color: value === 0 ? '#1A1A1A' : '#2DA44E'
                 };
             }
         }
+
+        const hudY = Math.max(0, this.offsetY - 2);
+        this.gridManager.selectedTiles[`${Math.max(0, this.offsetX)},${hudY}`] = {
+            type: 'text',
+            text: this.resultMessage || `Ходов: ${this.moves}`,
+            textColor: '#FFFFFF',
+            color: '#FFFFFF'
+        };
         this.gridManager.updateVisibleTiles();
+    }
+
+    drawBorder() {
+        this.render();
     }
 
     checkWin() {
@@ -177,12 +200,18 @@ export class SlidingPuzzle extends BaseModule {
         for (let y = 0; y < this.fieldHeight; y++) {
             for (let x = 0; x < this.fieldWidth; x++) {
                 if (y === this.fieldHeight - 1 && x === this.fieldWidth - 1) {
-                    if (this.board[y][x] !== 0) return false;
-                } else if (this.board[y][x] !== expected++) {
-                    return false;
+                    return this.board[y][x] === 0;
                 }
+                if (this.board[y][x] !== expected++) return false;
             }
         }
         return true;
     }
+
+    onResize() {
+        this.calculateOffsets();
+        this.render();
+    }
+
+    showContextMenu() {}
 }
